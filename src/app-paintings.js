@@ -3,9 +3,11 @@
 // carte et un choix de siècle à la place du clic sur un département.
 
 import { dateKey, humanDate } from './lib/date.js';
+import { DAILY, requestedMode } from './lib/mode.js';
 import { centuryLabel, century, loadPaintings } from './lib/paintings.js';
 import { createPaintingQuiz, maxScore, totalScore } from './lib/quiz-paintings.js';
-import { createLocalAdapter, createStore, streak } from './lib/storage.js';
+import { streak } from './lib/storage.js';
+import { THEMES_BY_ID, createThemeStore } from './lib/themes.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -17,11 +19,10 @@ const screens = {
 };
 
 // Clé distincte du quiz des départements : deux thèmes, deux progressions.
-const store = createStore(
-  createLocalAdapter({ key: 'ashquiz.tableaux.v1', statsKey: 'paintings' }),
-  { statsKey: 'paintings' },
-);
+const store = createThemeStore(THEMES_BY_ID.get('tableaux'));
 const today = dateKey();
+// `?mode=libre` (le bouton « Entraînement libre » du menu) saute la série du jour.
+const startMode = requestedMode(location.search);
 
 const run = {
   mode: 'daily',
@@ -58,11 +59,11 @@ async function main() {
   wireEvents();
   await refreshStreak();
 
-  const existing = await store.getDay(today);
+  const existing = startMode === DAILY ? await store.getDay(today) : null;
   if (existing) {
     await showSummary(existing, { alreadyDone: true });
   } else {
-    startRun('daily');
+    startRun(startMode);
   }
 }
 
@@ -114,7 +115,7 @@ function wireEvents() {
     if (!confirm('Effacer la progression du quiz des tableaux sur cet appareil ?')) return;
     await store.reset();
     await refreshStreak();
-    startRun('daily');
+    startRun(startMode);
   });
 }
 

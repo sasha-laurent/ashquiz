@@ -260,6 +260,15 @@ main {
   border-color: var(--accent);
 }
 
+/* Les liens stylés en bouton (menu, retour à l'accueil) doivent s'aligner avec
+   les vrais boutons de la même rangée. */
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
@@ -500,6 +509,107 @@ main {
   border-color: var(--line);
   color: var(--text);
   font-weight: 600;
+}
+
+/* --- Menu d'accueil -------------------------------------------------------- */
+
+.menu-title {
+  margin: 10px 0 6px;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+
+.menu-intro {
+  margin: 0 0 22px;
+  max-width: 62ch;
+}
+
+.theme-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.theme-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.theme-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.theme-icon {
+  align-self: start;
+  padding-top: 2px;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.theme-name {
+  margin: 0;
+  font-size: 18px;
+}
+
+.theme-prompt {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.theme-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  /* Réservée même vide, pour que la carte ne saute pas quand l'état arrive. */
+  min-height: 1.5em;
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.theme-mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.theme-mark.is-done {
+  color: var(--ok);
+}
+
+.theme-mark-icon {
+  font-weight: 700;
+}
+
+.theme-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 190px;
+}
+
+@media (max-width: 700px) {
+  .theme-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .theme-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .theme-actions .btn {
+    flex: 1;
+  }
 }
 
 /* --- Quiz des tableaux ----------------------------------------------------- */
