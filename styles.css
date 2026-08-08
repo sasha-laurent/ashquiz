@@ -473,3 +473,141 @@ main {
   color: var(--muted);
   font-size: 12px;
 }
+
+/* --- Navigation entre thèmes ---------------------------------------------- */
+
+.themes {
+  display: flex;
+  gap: 6px;
+}
+
+.themes a {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.themes a:hover {
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.themes a[aria-current='page'] {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Quiz des tableaux ----------------------------------------------------- */
+
+.centuries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.century {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.century:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.century:disabled {
+  cursor: default;
+}
+
+.century.is-picked {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+
+.century.is-ok {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 22%, transparent);
+  color: var(--ok);
+  opacity: 1;
+}
+
+.century.is-ko {
+  border-color: var(--ko);
+  background: color-mix(in srgb, var(--ko) 18%, transparent);
+  color: var(--ko);
+  opacity: 1;
+}
+
+.artwork {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.artwork img {
+  max-width: 100%;
+  /* La hauteur borne les formats en portrait, qui sinon poussent le formulaire
+     hors de l'écran. */
+  max-height: min(62vh, 560px);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.artwork-caption {
+  font-size: 13px;
+  text-align: center;
+  min-height: 1.4em;
+}
+
+.summary-thumb {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+@media (max-width: 860px) {
+  /* Colonnes empilées : le tableau doit passer avant le formulaire, sinon il
+     faut scroller pour voir ce qu'on est censé identifier. */
+  .artwork {
+    order: -1;
+  }
+
+  .artwork img {
+    max-height: 46vh;
+  }
+}
+
+.artwork.is-broken img {
+  display: none;
+}
+
+.artwork-fallback {
+  display: none;
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.artwork.is-broken .artwork-fallback {
+  display: block;
+}

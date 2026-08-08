@@ -3,26 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ashquiz — départements et préfectures</title>
+    <title>Ashquiz — tableaux</title>
     <meta
       name="description"
-      content="Cinq questions par jour pour réviser les départements français : nom, préfecture et position sur la carte."
+      content="Cinq tableaux par jour : retrouver le titre de l'œuvre, son peintre et son siècle."
     />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>"
     />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
         <span class="brand-name">Ashquiz</span>
-        <span class="brand-theme">Départements &amp; préfectures</span>
+        <span class="brand-theme">Tableaux</span>
       </div>
       <nav class="themes" aria-label="Thèmes">
-        <a href="index.html" aria-current="page">Départements</a>
-        <a href="tableaux.html">Tableaux</a>
+        <a href="index.html">Départements</a>
+        <a href="tableaux.html" aria-current="page">Tableaux</a>
       </nav>
       <div class="topbar-meta">
         <span id="today-label" class="today"></span>
@@ -32,14 +32,15 @@
 
     <main>
       <section id="screen-loading" class="screen">
-        <p class="muted">Chargement de la carte…</p>
+        <p class="muted">Chargement des œuvres…</p>
       </section>
 
       <section id="screen-error" class="screen" hidden>
-        <h1>La carte n'a pas pu être chargée</h1>
+        <h1>Les œuvres n'ont pas pu être chargées</h1>
         <p class="muted">
-          Le fond de carte provient du GeoJSON officiel des départements. Vérifie ta connexion, ou
-          vendorise le fichier en local avec <code>npm run build:map</code>.
+          La liste des tableaux est un fichier produit par
+          <code>npm run build:paintings</code>, qui interroge Wikidata. Lance cette commande puis
+          recharge la page.
         </p>
         <pre id="error-detail" class="error-detail"></pre>
       </section>
@@ -51,24 +52,27 @@
         </div>
 
         <form id="answer-form" class="card" autocomplete="off">
-          <p class="prompt">
-            Département n° <strong id="q-code" class="q-code">—</strong>
-          </p>
+          <p class="prompt">Quel est ce tableau ?</p>
 
           <div class="columns">
             <div class="fields">
               <label class="field">
-                <span class="field-label">Nom du département</span>
-                <input id="in-name" type="text" spellcheck="false" enterkeyhint="next" />
+                <span class="field-label">Titre de l'œuvre</span>
+                <input id="in-title" type="text" spellcheck="false" enterkeyhint="next" />
               </label>
 
               <label class="field">
-                <span class="field-label">Préfecture</span>
-                <input id="in-prefecture" type="text" spellcheck="false" enterkeyhint="done" />
+                <span class="field-label">Peintre</span>
+                <input id="in-painter" type="text" spellcheck="false" enterkeyhint="done" />
               </label>
 
-              <p class="field-label map-instruction">Position sur la carte</p>
-              <p id="map-hint" class="hint">Clique le département sur la carte →</p>
+              <p class="field-label map-instruction" id="centuries-label">Siècle</p>
+              <div
+                id="centuries"
+                class="centuries"
+                role="radiogroup"
+                aria-labelledby="centuries-label"
+              ></div>
 
               <div id="feedback" class="feedback" hidden></div>
 
@@ -78,7 +82,14 @@
               </div>
             </div>
 
-            <div id="map" class="map-wrap"></div>
+            <figure id="artwork" class="artwork">
+              <img id="artwork-image" alt="Tableau à identifier" />
+              <p class="artwork-fallback">
+                L'image n'a pas pu être chargée depuis Wikimedia Commons.<br />
+                Le peintre et le siècle restent devinables… ou passe à la question suivante.
+              </p>
+              <figcaption id="artwork-caption" class="artwork-caption muted"></figcaption>
+            </figure>
           </div>
         </form>
       </section>
@@ -102,9 +113,11 @@
     </main>
 
     <footer class="footer">
-      <span>Fond de carte : GeoJSON des départements (Etalab / IGN, licence ouverte).</span>
+      <span id="data-credit"
+        >Œuvres et métadonnées : Wikidata (CC0) — images : Wikimedia Commons.</span
+      >
     </footer>
 
-    <script type="module" src="src/app.js"></script>
+    <script type="module" src="src/app-paintings.js"></script>
   </body>
 </html>

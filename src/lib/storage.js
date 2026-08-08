@@ -9,39 +9,51 @@ const KEY = 'ashquiz.v1';
 // progression déjà enregistrée. À supprimer dans quelques mois.
 const LEGACY_KEY = 'quotiquiz.v1';
 
-const empty = () => ({ version: 1, days: {}, departments: {} });
+const empty = (statsKey = 'departments') => ({ version: 1, days: {}, [statsKey]: {} });
 
-/** Adapter par défaut : localStorage du navigateur. */
-export const localAdapter = {
-  async read() {
-    try {
-      const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
-      if (!raw) return empty();
-      const data = JSON.parse(raw);
-      return { ...empty(), ...data };
-    } catch {
-      return empty();
-    }
-  },
-  async write(data) {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(data));
-      localStorage.removeItem(LEGACY_KEY);
-    } catch {
-      /* quota plein ou mode privé : on continue sans persistance */
-    }
-  },
-  async clear() {
-    try {
-      localStorage.removeItem(KEY);
-      localStorage.removeItem(LEGACY_KEY);
-    } catch {
-      /* ignore */
-    }
-  },
-};
+/**
+ * Adapter localStorage. Chaque thème a sa propre clé : le quiz des tableaux ne
+ * doit pas écraser la progression du quiz des départements, ni compter dans sa
+ * série de jours.
+ */
+export function createLocalAdapter({ key = KEY, legacyKeys = [], statsKey } = {}) {
+  return {
+    async read() {
+      try {
+        const raw = [key, ...legacyKeys].map((k) => localStorage.getItem(k)).find(Boolean);
+        if (!raw) return empty(statsKey);
+        return { ...empty(statsKey), ...JSON.parse(raw) };
+      } catch {
+        return empty(statsKey);
+      }
+    },
+    async write(data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+        for (const old of legacyKeys) localStorage.removeItem(old);
+      } catch {
+        /* quota plein ou mode privé : on continue sans persistance */
+      }
+    },
+    async clear() {
+      try {
+        for (const k of [key, ...legacyKeys]) localStorage.removeItem(k);
+      } catch {
+        /* ignore */
+      }
+    },
+  };
+}
 
-export function createStore(adapter = localAdapter) {
+/** Adapter par défaut : le quiz des départements. */
+export const localAdapter = createLocalAdapter({ legacyKeys: [LEGACY_KEY], statsKey: 'departments' });
+
+/**
+ * @param {object} adapter  couche de persistance (`read` / `write` / `clear`)
+ * @param {{statsKey?: string}} [options]  nom du sous-objet où agréger les
+ *   statistiques par item — un par thème.
+ */
+export function createStore(adapter = localAdapter, { statsKey = 'departments' } = {}) {
   let cache = null;
   const load = async () => (cache ??= await adapter.read());
 
@@ -56,23 +68,32 @@ export function createStore(adapter = localAdapter) {
       return state.days[dateKey] ?? null;
     },
 
-    /** Enregistre une journée terminée et met à jour les stats par département. */
+    /**
+     * Enregistre une journée terminée et met à jour les stats par item.
+     * Les sous-réponses sont découvertes sur l'objet corrigé (toute propriété
+     * portant un `ok`), ce qui rend la fonction indépendante du thème : le quiz
+     * des départements y range `name`/`prefecture`/`map`, celui des tableaux
+     * `title`/`painter`/`century`.
+     */
     async saveDay(dateKey, day) {
       const state = await load();
       state.days[dateKey] = day;
+      const stats = (state[statsKey] ??= {});
       for (const answer of day.answers) {
-        const stat = (state.departments[answer.code] ??= { seen: 0, name: 0, prefecture: 0, map: 0 });
+        const stat = (stats[answer.code] ??= { seen: 0 });
         stat.seen += 1;
-        stat.name += answer.name.ok ? 1 : 0;
-        stat.prefecture += answer.prefecture.ok ? 1 : 0;
-        stat.map += answer.map.ok ? 1 : 0;
+        for (const [field, result] of Object.entries(answer)) {
+          if (result && typeof result === 'object' && 'ok' in result) {
+            stat[field] = (stat[field] ?? 0) + (result.ok ? 1 : 0);
+          }
+        }
         stat.lastSeen = dateKey;
       }
       await adapter.write(state);
     },
 
     async reset() {
-      cache = empty();
+      cache = empty(statsKey);
       await adapter.clear();
     },
   };
