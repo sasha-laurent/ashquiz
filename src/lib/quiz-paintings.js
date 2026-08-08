@@ -71,6 +71,13 @@ export function createPaintingQuiz(paintings) {
     // siennes : sans quoi « Monet » serait refusé sur la moitié de ses tableaux.
     ownerOf: (field, painting) => (field === 'painter' ? painting.painter : painting.id),
     choiceFields: { century: (painting, given) => given === century(painting.year) },
+    // Leurres au hasard : trois autres titres, trois autres peintres, et trois
+    // autres siècles pris parmi ceux que le corpus représente.
+    choices: {
+      title: {},
+      painter: {},
+      century: { correct: (painting) => century(painting.year) },
+    },
     distinctBy: (painting) => painting.painter,
   });
 

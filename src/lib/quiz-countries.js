@@ -15,6 +15,8 @@ export const QUIZ = createQuiz({
   items: COUNTRIES,
   textFields: ['name', 'capital'],
   accepted,
+  // Rien de particulier à imiter ici : trois pays et trois capitales au hasard.
+  choices: { name: {}, capital: {} },
 });
 
 /**

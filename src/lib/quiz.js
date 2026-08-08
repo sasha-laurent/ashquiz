@@ -2,6 +2,7 @@
 // deviner — le corpus, les trois sous-réponses et le clic sur la carte.
 
 import { DEPARTMENTS, accepted } from '../data/departments.js';
+import { neighbours } from './choices.js';
 import { QUESTIONS_PER_DAY, createQuiz } from './quiz-core.js';
 
 export { QUESTIONS_PER_DAY };
@@ -14,6 +15,15 @@ export const QUIZ = createQuiz({
   textFields: ['name', 'prefecture'],
   accepted,
   choiceFields: { map: (dep, given) => given === dep.code },
+  choices: {
+    // Le numéro suit l'ordre alphabétique des noms : les voisins de numéro sont
+    // les leurres qui apprennent quelque chose. Le 45 se choisit entre Loiret,
+    // Loire-Atlantique et Haute-Loire, pas entre Loiret et Vaucluse.
+    name: { pool: (dep, { items, index }) => neighbours(items, index, 3).map((d) => d.name) },
+    // Les préfectures, elles, n'ont pas d'ordre : quatre villes au hasard.
+    prefecture: {},
+    map: { correct: (dep) => dep.code },
+  },
 });
 
 /**

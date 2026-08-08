@@ -10,7 +10,8 @@ Trois thèmes pour l'instant :
 - **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
-consécutifs. Le menu affiche, pour chacun, si la série du jour est faite et la série de jours en
+consécutifs. Chacun se joue au clavier ou, d'un bouton, en **mode carré** : quatre propositions par
+sous-réponse. Le menu affiche, pour chacun, si la série du jour est faite et la série de jours en
 cours ; une fois le quiz du jour terminé, c'est l'entraînement libre qui devient l'action mise en
 avant.
 
@@ -91,6 +92,41 @@ les statistiques. On y accède depuis le menu ou depuis l'écran de résultat ; 
 `?mode=libre` à l'adresse du thème (`departements.html?mode=libre`), ce qui saute la série du jour
 même si elle n'est pas encore faite. Sans ce paramètre, une page de thème ouvre toujours le quiz du
 jour — ou son résultat s'il est déjà joué.
+
+## Mode carré
+
+Le bouton **Mode carré**, dans la barre du haut de chaque page de quiz, remplace la saisie au
+clavier par **quatre propositions par sous-réponse**, une seule juste. C'est le mode à choisir pour
+enchaîner les séries quand un thème est encore neuf : on reconnaît avant de savoir restituer.
+
+Le réglage vaut pour l'appareil et pour tous les thèmes ; il s'applique au quiz du jour comme à
+l'entraînement libre, et il est retenu d'une visite à l'autre. Le basculer en pleine série remet la
+série en jeu : les questions ne changent pas (la graine non plus), seule la façon d'y répondre.
+Comme 12 / 15 en cochant et 12 / 15 au clavier ne se valent pas, l'écran de résultat rappelle les
+journées jouées au carré — le barème, lui, ne bouge pas.
+
+Les leurres sont tirés de façon déterministe, comme la série : mêmes jour et question, mêmes
+propositions dans le même ordre. Recharger la page ne redistribue rien.
+
+Ce qui est proposé dépend de la sous-réponse, et c'est là tout l'intérêt :
+
+- **nom d'un département** — la bonne réponse et trois départements de **numéro voisin (à ±3)**.
+  Les numéros suivant l'ordre alphabétique des noms, ce sont les confusions à travailler : le 45 se
+  choisit entre Loiret, Loire-Atlantique et Haute-Loire, pas entre Loiret et Vaucluse ;
+- **préfecture** — quatre villes quelconques : les préfectures n'ont pas d'ordre à exploiter ;
+- **position sur la carte** — quatre zones surlignées, seules cliquables, tirées au hasard sur toute
+  la carte. Elles n'ont aucun rapport avec les noms proposés juste au-dessus : sans quoi une
+  sous-réponse livrerait l'autre ;
+- **tableaux** (titre, peintre, siècle) et **drapeaux** (pays, capitale) — quatre propositions
+  quelconques prises dans le corpus. Les siècles restent rangés dans l'ordre chronologique : la
+  position d'un bouton ne doit rien dire de la réponse.
+
+Côté code, un thème déclare ces règles dans son `createQuiz` (`choices`), et le noyau
+(`src/lib/choices.js`, `src/lib/quiz-core.js`) se charge du reste : écarter les leurres qui se
+lisent comme la bonne réponse (« St Etienne » à côté de « Saint-Étienne » ferait deux cases justes),
+respecter le filtre de tirage du thème (une zone absente du fond de carte n'est jamais proposée) et
+mélanger. Une sous-réponse cochée est corrigée exactement comme une réponse tapée, et ne rien cocher
+vaut ne rien répondre.
 
 ## Tableaux
 
@@ -199,8 +235,8 @@ propre ; les deux briques communes s'occupent du reste :
   l'écran de résultat ;
 - **`src/ui/quiz-app.js`** — l'écran. `startQuizApp({ theme, fields, inputs… })` tient la barre de
   progression, l'enchaînement des questions, la correction affichée, le résultat, les statistiques,
-  l'entraînement libre et la persistance. Le thème ne fournit que sa question (`ask`) et sa
-  correction visuelle (`reveal`).
+  l'entraînement libre, le mode carré et la persistance. Le thème ne fournit que sa question (`ask`)
+  et sa correction visuelle (`reveal`).
 
 Restent, par thème : `src/lib/quiz-<thème>.js` (le corpus et ses sous-réponses),
 `src/app-<thème>.js` (une centaine de lignes de DOM propre au thème) et sa page HTML. Les briques
@@ -211,10 +247,11 @@ Concrètement, pour un quatrième thème :
 1. **les données** — un module de `src/data/` ou un fichier de `data/` produit par un outil de
    `tools/` ;
 2. **`src/lib/quiz-<thème>.js`** — un appel à `createQuiz` : les champs en texte libre, la fonction
-   `accepted` qui dit les réponses valables, et éventuellement un `choiceFields` pour ce qui se
-   répond au clic (la carte, le siècle) ;
+   `accepted` qui dit les réponses valables, éventuellement un `choiceFields` pour ce qui se
+   répond au clic (la carte, le siècle), et un `choices` pour le mode carré ;
 3. **`<thème>.html`** — le squelette d'une page existante, en gardant les identifiants attendus
-   (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) ;
+   (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) ; `btn-carre` est
+   facultatif, une page qui ne le porte pas se joue simplement au clavier ;
 4. **`src/app-<thème>.js`** — l'appel à `startQuizApp` ;
 5. **une entrée dans `THEMES`** (`src/lib/themes.js`).
 
