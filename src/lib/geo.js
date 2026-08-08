@@ -46,16 +46,27 @@ function ringsOf(geometry) {
   return [];
 }
 
-export const VIEW = { width: 1000, height: 820 };
+export const VIEW = { width: 1000, height: 660 };
 
 const PETITE_COURONNE = ['75', '92', '93', '94'];
-const OVERSEAS = [
-  { code: '971', label: 'Guadeloupe' },
-  { code: '972', label: 'Martinique' },
-  { code: '973', label: 'Guyane' },
-  { code: '974', label: 'La Réunion' },
-  { code: '976', label: 'Mayotte' },
+
+// La métropole tient au centre ; les encarts occupent les deux colonnes
+// latérales, Antilles-Guyane à l'ouest et océan Indien à l'est, ce qui évite de
+// laisser la moitié du cadre vide.
+const METROPOLE_BOX = { x: 170, y: 6, w: 656, h: 648 };
+// `pad` : marge intérieure, pour que les côtes ne collent pas au cadre pointillé.
+const INSET = { w: 142, h: 186, top: 32, step: 208, left: 6, right: 856, pad: 9 };
+
+const INSETS = [
+  { id: '971', label: 'Guadeloupe', codes: ['971'], column: 'left', row: 0 },
+  { id: '972', label: 'Martinique', codes: ['972'], column: 'left', row: 1 },
+  { id: '973', label: 'Guyane', codes: ['973'], column: 'left', row: 2 },
+  { id: 'idf', label: 'Petite couronne', codes: PETITE_COURONNE, column: 'right', row: 0 },
+  { id: '974', label: 'La Réunion', codes: ['974'], column: 'right', row: 1 },
+  { id: '976', label: 'Mayotte', codes: ['976'], column: 'right', row: 2 },
 ];
+
+const OVERSEAS_CODES = ['971', '972', '973', '974', '976'];
 
 /**
  * Construit le modèle d'affichage de la carte.
@@ -68,36 +79,32 @@ export function buildMapModel(geojson) {
     if (code) byCode.set(code, ringsOf(feature.geometry));
   }
 
-  const overseasCodes = new Set(OVERSEAS.map((o) => o.code));
+  const overseasCodes = new Set(OVERSEAS_CODES);
   const mainlandCodes = [...byCode.keys()].filter((code) => !overseasCodes.has(code));
 
-  const groups = [];
+  const groups = [makeGroup('metropole', null, mainlandCodes, byCode, METROPOLE_BOX)];
 
-  groups.push(
-    makeGroup('metropole', null, mainlandCodes, byCode, { x: 200, y: 10, w: 620, h: 800 }),
-  );
-
-  groups.push(
-    makeGroup('idf', 'Petite couronne', PETITE_COURONNE, byCode, { x: 838, y: 34, w: 150, h: 150 }),
-  );
-
-  OVERSEAS.forEach((dom, index) => {
+  for (const inset of INSETS) {
     groups.push(
-      makeGroup(dom.code, dom.label, [dom.code], byCode, {
-        x: 12,
-        y: 34 + index * 128,
-        w: 172,
-        h: 104,
-      }),
+      makeGroup(inset.id, inset.label, inset.codes, byCode, {
+        x: inset.column === 'left' ? INSET.left : INSET.right,
+        y: INSET.top + inset.row * INSET.step,
+        w: INSET.w,
+        h: INSET.h,
+      }, INSET.pad),
     );
-  });
+  }
 
+  // Un encart dont aucun code n'est présent dans le GeoJSON est simplement omis.
   return { groups: groups.filter(Boolean), view: VIEW };
 }
 
-function makeGroup(id, label, codes, byCode, box) {
+function makeGroup(id, label, codes, byCode, box, pad = 0) {
   const present = codes.filter((code) => byCode.has(code) && byCode.get(code).length);
   if (!present.length) return null;
+
+  // Le cadre reste `box` ; le tracé, lui, vise l'intérieur.
+  const inner = { x: box.x + pad, y: box.y + pad, w: box.w - 2 * pad, h: box.h - 2 * pad };
 
   // Projection équirectangulaire calée sur la latitude moyenne du groupe :
   // suffisant à cette échelle, et sans dépendance externe.
@@ -119,9 +126,9 @@ function makeGroup(id, label, codes, byCode, box) {
   const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
   const spanX = (maxLon - minLon) * k || 1e-6;
   const spanY = maxLat - minLat || 1e-6;
-  const scale = Math.min(box.w / spanX, box.h / spanY);
-  const offsetX = box.x + (box.w - spanX * scale) / 2;
-  const offsetY = box.y + (box.h - spanY * scale) / 2;
+  const scale = Math.min(inner.w / spanX, inner.h / spanY);
+  const offsetX = inner.x + (inner.w - spanX * scale) / 2;
+  const offsetY = inner.y + (inner.h - spanY * scale) / 2;
 
   const project = ([lon, lat]) => [
     offsetX + (lon - minLon) * k * scale,

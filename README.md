@@ -30,6 +30,11 @@ La carte est construite à l'exécution à partir du GeoJSON officiel des dépar
 (dépôt [france-geojson](https://github.com/gregoiredavid/france-geojson), données Etalab/IGN en
 licence ouverte), projeté en SVG par `src/lib/geo.js`.
 
+`npm run build:map` assemble deux fichiers de ce dépôt : la version simplifiée, qui ne couvre que
+la métropole (96 départements), et les cinq DOM repris du fichier « avec outre-mer », allégés au
+passage (Douglas-Peucker, tolérance proportionnelle à la taille du département). Le fichier écrit
+contient les 101 départements.
+
 `src/lib/geo.js` cherche les sources dans cet ordre :
 
 1. `data/departements.geojson` — version locale, écrite par `npm run build:map` ;
@@ -41,7 +46,8 @@ le site autonome et plus rapide.
 
 La métropole est dessinée d'un bloc ; la petite couronne parisienne (75, 92, 93, 94) et les cinq
 départements d'outre-mer sont repris dans des encarts, sans quoi ils seraient illisibles ou hors
-cadre. Un département présent deux fois est cliquable aux deux endroits.
+cadre. Les encarts occupent les deux colonnes latérales : Antilles et Guyane à l'ouest, petite
+couronne et océan Indien à l'est. Un département présent deux fois est cliquable aux deux endroits.
 
 ## Correction des réponses
 
