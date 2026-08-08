@@ -8,6 +8,7 @@
     "dev": "node tools/serve.mjs",
     "build:map": "node tools/build-map.mjs",
     "build:paintings": "node tools/build-paintings.mjs",
+    "build:flags": "node tools/build-flags.mjs",
     "test": "node --test \"tests/*.test.mjs\""
   },
   "license": "MIT"

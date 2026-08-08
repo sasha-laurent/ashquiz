@@ -26,6 +26,15 @@ export const THEMES = [
     prompt: "À partir de l'image : le titre de l'œuvre, son peintre et son siècle.",
     storage: { key: 'ashquiz.tableaux.v1', statsKey: 'paintings' },
   },
+  {
+    id: 'pays',
+    name: 'Drapeaux & capitales',
+    icon: '🚩',
+    href: 'pays.html',
+    short: 'Pays',
+    prompt: 'À partir du drapeau : le nom du pays et sa capitale.',
+    storage: { key: 'ashquiz.pays.v1', statsKey: 'countries' },
+  },
 ];
 
 export const THEMES_BY_ID = new Map(THEMES.map((theme) => [theme.id, theme]));
