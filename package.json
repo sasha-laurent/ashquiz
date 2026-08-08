@@ -1,0 +1,13 @@
+{
+  "name": "quotiquiz",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Révisions quotidiennes par petits quiz. Premier thème : départements et préfectures.",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "build:map": "node tools/build-map.mjs",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "license": "MIT"
+}
