@@ -5,7 +5,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { century, centuryLabel } from '../src/lib/paintings.js';
-import { accepted, createPaintingQuiz, totalScore } from '../src/lib/quiz-paintings.js';
+import { accepted, createPaintingQuiz, shortNames, totalScore } from '../src/lib/quiz-paintings.js';
 import { createLocalAdapter, createStore } from '../src/lib/storage.js';
 
 const CORPUS = [
@@ -85,8 +85,40 @@ test('le nom exact d’un autre peintre n’est jamais toléré', () => {
 
 test('les alias de peintre déclarés sont acceptés', () => {
   const renoir = CORPUS[6];
-  assert.deepEqual(accepted(renoir, 'painter'), ['Pierre-Auguste Renoir', 'Auguste Renoir']);
+  assert.deepEqual(accepted(renoir, 'painter'), [
+    'Pierre-Auguste Renoir',
+    'Auguste Renoir',
+    'Renoir',
+  ]);
   assert.equal(quiz.grade(renoir, { title: '', painter: 'Auguste Renoir', century: null }).painter.ok, true);
+});
+
+test('le nom de famille seul suffit pour le peintre', () => {
+  const cases = [
+    [CORPUS[2], 'Monet'],
+    [CORPUS[0], 'van Gogh'],
+    [CORPUS[0], 'Gogh'],
+    [CORPUS[3], 'de Vinci'],
+    [CORPUS[3], 'Vinci'],
+    [CORPUS[6], 'Renoir'],
+    // La tolérance aux fautes de frappe vaut aussi sur la forme courte.
+    [CORPUS[5], 'Munsh'],
+  ];
+  for (const [painting, given] of cases) {
+    const answer = quiz.grade(painting, { title: '', painter: given, century: null });
+    assert.equal(answer.painter.ok, true, `« ${given} » refusé pour ${painting.painter}`);
+  }
+});
+
+test('une particule ou un qualificatif seul ne vaut pas réponse', () => {
+  for (const given of ['de', 'van', 'Le']) {
+    const answer = quiz.grade(CORPUS[3], { title: '', painter: given, century: null });
+    assert.equal(answer.painter.ok, false, `« ${given} » accepté pour ${CORPUS[3].painter}`);
+  }
+  assert.deepEqual(shortNames("Pieter Brueghel l'Ancien"), ["Brueghel l'Ancien", 'Brueghel']);
+  assert.deepEqual(shortNames('Élisabeth Vigée Le Brun'), ['Vigée Le Brun', 'Le Brun', 'Brun']);
+  // Un nom d'un seul mot n'a pas de forme courte : rien à ajouter.
+  assert.deepEqual(shortNames('Rembrandt'), []);
 });
 
 test('le siècle attendu est celui de l’année de l’œuvre', () => {

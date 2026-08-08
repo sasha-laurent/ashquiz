@@ -6,14 +6,54 @@
 
 import { century } from './paintings.js';
 import { makeRng, sample } from './rng.js';
-import { check, variants } from './text.js';
+import { check, normalize, variants } from './text.js';
 
 export const QUESTIONS_PER_DAY = 5;
 export const POINTS_PER_QUESTION = 3;
 
-/** Réponses acceptées pour un champ : la valeur attendue plus ses alias. */
+// Mots qui ne désignent personne à eux seuls : les particules qui précèdent un
+// nom (« van » Gogh, « de La » Tour) et les qualificatifs qui le suivent
+// (Brueghel « l'Ancien »).
+const PARTICLES = new Set(
+  'de du des da di del della dos van von der den ten ter le la les l y af of the'.split(' '),
+);
+const QUALIFIERS = new Set(['l ancien', 'le jeune', 'l aine', 'ancien', 'jeune', 'aine', 'dit']);
+
+const isParticle = (word) => PARTICLES.has(normalize(word));
+const isQualifier = (word) => QUALIFIERS.has(normalize(word));
+
+/**
+ * Formes courtes d'un nom de peintre : tout ce qui suit le prénom.
+ * « Claude Monet » → « Monet », « Vincent van Gogh » → « van Gogh », « Gogh »,
+ * « Pieter Brueghel l'Ancien » → « Brueghel l'Ancien », « Brueghel ».
+ * Un nom d'un seul mot (« Rembrandt », « Titien ») n'en produit aucune.
+ */
+export function shortNames(painter) {
+  const words = String(painter).trim().split(/\s+/).filter(Boolean);
+  // Le nom de famille seul, c'est aussi le nom sans son qualificatif final.
+  const core = [...words];
+  while (core.length > 1 && isQualifier(core.at(-1))) core.pop();
+
+  const out = new Set();
+  for (const list of [words, core]) {
+    for (let i = 1; i < list.length; i++) {
+      const rest = list.slice(i);
+      // « l'Ancien » ou « de » isolés ne sont pas une réponse.
+      if (rest.every((word) => isParticle(word) || isQualifier(word))) continue;
+      out.add(rest.join(' '));
+    }
+  }
+  return [...out];
+}
+
+/**
+ * Réponses acceptées pour un champ : la valeur attendue plus ses alias — et,
+ * pour le peintre, ses formes courtes : le nom de famille suffit.
+ */
 export function accepted(painting, field) {
-  return [painting[field], ...(painting.alias?.[field] ?? [])].filter(Boolean);
+  const answers = [painting[field], ...(painting.alias?.[field] ?? [])].filter(Boolean);
+  if (field !== 'painter') return answers;
+  return [...new Set([...answers, ...answers.flatMap(shortNames)])];
 }
 
 export function createPaintingQuiz(paintings) {
