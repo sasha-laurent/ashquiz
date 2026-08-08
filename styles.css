@@ -721,3 +721,67 @@ a.btn {
 .artwork.is-broken .artwork-fallback {
   display: block;
 }
+
+.flag {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.flag img {
+  width: 100%;
+  max-width: 440px;
+  /* Les proportions vont du carré (Suisse) au fanion (Népal) en passant par le
+     11:28 du Qatar : un cadre fixe et `contain` évitent que la mise en page
+     saute d'une question à l'autre. */
+  aspect-ratio: 3 / 2;
+  object-fit: contain;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  /* Fond clair : sans lui, les drapeaux à dominante blanche (Japon, Afghanistan)
+     se confondraient avec la page. */
+  background: #e7eaf1;
+}
+
+.flag-caption {
+  font-size: 13px;
+  text-align: center;
+  min-height: 1.4em;
+}
+
+.summary-flag {
+  width: 46px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: #e7eaf1;
+}
+
+@media (max-width: 860px) {
+  /* Colonnes empilées : le drapeau doit passer avant le formulaire, sinon il
+     faut scroller pour voir ce qu'on est censé identifier. */
+  .flag {
+    order: -1;
+  }
+}
+
+.flag.is-broken img {
+  display: none;
+}
+
+.flag-fallback {
+  display: none;
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.flag.is-broken .flag-fallback {
+  display: block;
+}

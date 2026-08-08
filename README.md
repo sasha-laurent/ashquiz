@@ -3,10 +3,11 @@
 Petits quiz de révision quotidiens. La page d'accueil (`index.html`) est un menu : un bloc par
 thème, avec son quiz du jour et son entraînement libre.
 
-Deux thèmes pour l'instant :
+Trois thèmes pour l'instant :
 
 - **Départements et préfectures français** (`departements.html`) ;
-- **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle.
+- **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle ;
+- **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
 consécutifs. Le menu affiche, pour chacun, si la série du jour est faite et la série de jours en
@@ -30,6 +31,7 @@ affichent le même quiz le même jour.
 ```sh
 npm run build:map        # une fois : télécharge le fond de carte dans data/
 npm run build:paintings  # une fois : télécharge la liste des œuvres dans data/
+npm run build:flags      # une fois : télécharge les drapeaux dans data/drapeaux/
 npm run dev              # http://localhost:8080
 npm test                 # tests unitaires (aucune dépendance)
 ```
@@ -136,15 +138,71 @@ Deux conséquences à connaître :
 Relancer la commande régénère le fichier : c'est le seul moyen de faire évoluer la liste des œuvres,
 il n'y a rien à modifier dans le code.
 
+## Drapeaux et capitales
+
+Cinq drapeaux par jour. Pour chacun, l'image est affichée et il faut donner :
+
+1. le **nom** du pays,
+2. sa **capitale**.
+
+Deux sous-réponses seulement, donc **2 points par question et 10 points par jour** — là où les
+départements et les tableaux en valent 15. Le drapeau tient lieu d'énoncé : il n'y a rien à
+désigner en plus, et forcer une troisième question (le continent, la monnaie) aurait allongé chaque
+tour sans rien apprendre de plus.
+
+Le corpus est la liste des **193 États membres de l'ONU** (`src/data/countries.js`), tirés à parts
+égales : c'est une règle simple à énoncer, qui ne demande aucun arbitrage sur les États à
+reconnaissance partielle. Le Vatican, la Palestine, le Kosovo et Taïwan en sont donc absents.
+
+La correction réutilise `src/lib/text.js` : mêmes tolérances qu'ailleurs, et même garde-fou
+(« Niger » ne passe jamais pour le Nigeria, ni « Vienne » pour Vilnius). Des alias sont déclarés
+pour les noms d'usage (« Myanmar », « Swaziland », « RDC », « USA »), les graphies concurrentes
+(« Kyiv » pour Kiev, « Dhaka » pour Dacca) et les **capitales multiples** : l'Afrique du Sud accepte
+Pretoria, Le Cap et Bloemfontein, la Bolivie Sucre et La Paz. La première de la liste est celle qui
+s'affiche à la correction, les autres sont signalées entre parenthèses.
+
+### Les drapeaux
+
+`npm run build:flags` écrit `data/drapeaux/<code>.png` : un rendu de 480 px de large du drapeau de
+chaque pays, téléchargé depuis [Wikimedia Commons](https://commons.wikimedia.org). Les 193 fichiers
+pèsent environ 1,9 Mo, mais une partie n'est jamais chargée : une page de quiz ne demande que les
+cinq drapeaux de sa série.
+
+Deux choix méritent une explication :
+
+- **les images sont vendorisées**, contrairement à celles des tableaux. Une URL Commons contient le
+  nom du fichier, donc la réponse (`Flag of France.svg` en clair dans l'onglet réseau). Un fichier
+  local nommé par le code ISO ne la donne pas — il faut vouloir la chercher — et le site n'a plus
+  besoin du réseau ;
+- **des PNG plutôt que les SVG d'origine**, parce que les drapeaux à emblème détaillé sont énormes
+  en vectoriel (280 ko pour l'Équateur, 156 ko pour l'Espagne) là où leur rendu en fait 15.
+
+Le drapeau retenu est celui que Wikidata donne pour drapeau *actuel* du pays. C'est une règle
+mécanique, qui évite d'arbitrer au cas par cas — mais elle a des conséquences visibles :
+l'Afghanistan sort avec le drapeau blanc des talibans et la Syrie avec le drapeau adopté en 2025,
+pas ceux des atlas d'il y a quelques années. Changer un drapeau se fait en corrigeant le champ
+`commons` du pays puis en relançant `npm run build:flags -- --force`.
+
+Le fichier déjà présent n'est pas retéléchargé : Commons répond `429` au bout de quelques dizaines
+de requêtes, et relancer la commande reprend simplement les manquants.
+
 ## Ajouter un thème plus tard
 
-Le code est découpé pour ça, et le thème « tableaux » sert d'exemple :
+Le code est découpé pour ça, et les thèmes déjà là servent d'exemples :
 
 - `src/data/`, ou un fichier de `data/` produit par un outil de `tools/` — les données du thème ;
-- `src/lib/quiz.js`, `src/lib/quiz-paintings.js` — tirage de la série et notation, sans DOM ;
+- `src/lib/quiz.js`, `src/lib/quiz-paintings.js`, `src/lib/quiz-countries.js` — tirage de la série
+  et notation, sans DOM ;
 - `src/lib/text.js`, `src/lib/rng.js`, `src/lib/storage.js` — briques réutilisables telles quelles ;
-- `src/ui/`, `src/app.js`, `src/app-paintings.js` — l'écran, spécifique à un thème ;
+- `src/ui/`, `src/app.js`, `src/app-paintings.js`, `src/app-countries.js` — l'écran, spécifique à un
+  thème ;
 - `src/lib/themes.js` — le catalogue : une entrée par thème (nom, icône, page, clé de stockage).
+
+Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays) :
+un module JS importé normalement, modifiable à la main, et les outils de `tools/` ne servent qu'aux
+images. Corpus ouvert et régénérable (tableaux) : un fichier de `data/` produit par un outil et
+chargé en JSON à l'exécution, ce qui impose un écran de chargement et un écran d'erreur — le thème
+« pays » s'en passe.
 
 Ajouter une entrée à `THEMES` suffit à faire apparaître le thème dans le menu, avec ses deux
 boutons et son état du jour : `src/app-menu.js` ne connaît rien du contenu des thèmes, il lit leur

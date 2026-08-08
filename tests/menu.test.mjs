@@ -43,6 +43,7 @@ test('la progression déjà enregistrée reste lisible', () => {
   assert.equal(THEMES_BY_ID.get('departements').storage.key, 'ashquiz.v1');
   assert.ok(THEMES_BY_ID.get('departements').storage.legacyKeys.includes('quotiquiz.v1'));
   assert.equal(THEMES_BY_ID.get('tableaux').storage.key, 'ashquiz.tableaux.v1');
+  assert.equal(THEMES_BY_ID.get('pays').storage.key, 'ashquiz.pays.v1');
 });
 
 test('le menu pointe vers des pages qui existent et savent démarrer un entraînement', async () => {

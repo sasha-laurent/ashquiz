@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ashquiz — drapeaux</title>
+    <meta
+      name="description"
+      content="Cinq drapeaux par jour : retrouver le nom du pays et sa capitale."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-name">Ashquiz</span>
+        <span class="brand-theme">Drapeaux</span>
+      </div>
+      <nav class="themes" aria-label="Thèmes">
+        <a href="index.html">Accueil</a>
+        <a href="departements.html">Départements</a>
+        <a href="tableaux.html">Tableaux</a>
+        <a href="pays.html" aria-current="page">Pays</a>
+      </nav>
+      <div class="topbar-meta">
+        <span id="today-label" class="today"></span>
+        <span id="streak" class="badge" hidden></span>
+      </div>
+    </header>
+
+    <main>
+      <section id="screen-quiz" class="screen" hidden>
+        <div class="quiz-head">
+          <ol id="progress" class="progress" aria-label="Progression"></ol>
+          <span id="mode-badge" class="badge badge-practice" hidden>Entraînement</span>
+        </div>
+
+        <form id="answer-form" class="card" autocomplete="off">
+          <p class="prompt">Quel est ce pays ?</p>
+
+          <div class="columns">
+            <div class="fields">
+              <label class="field">
+                <span class="field-label">Pays</span>
+                <input id="in-name" type="text" spellcheck="false" enterkeyhint="next" />
+              </label>
+
+              <label class="field">
+                <span class="field-label">Capitale</span>
+                <input id="in-capital" type="text" spellcheck="false" enterkeyhint="done" />
+              </label>
+
+              <div id="feedback" class="feedback" hidden></div>
+
+              <div class="actions">
+                <button id="btn-validate" type="submit" class="btn btn-primary">Valider</button>
+                <button id="btn-next" type="button" class="btn btn-primary" hidden>Suivant</button>
+              </div>
+            </div>
+
+            <figure id="flag" class="flag">
+              <img id="flag-image" alt="Drapeau à identifier" />
+              <p class="flag-fallback">
+                Le drapeau n'a pas pu être chargé.<br />
+                Les images sont écrites par <code>npm run build:flags</code>.
+              </p>
+              <figcaption id="flag-caption" class="flag-caption muted"></figcaption>
+            </figure>
+          </div>
+        </form>
+      </section>
+
+      <section id="screen-summary" class="screen" hidden>
+        <div class="card">
+          <p id="summary-title" class="summary-title"></p>
+          <p id="summary-score" class="summary-score"></p>
+          <ul id="summary-list" class="summary-list"></ul>
+          <div class="actions">
+            <button id="btn-practice" type="button" class="btn">Entraînement libre</button>
+            <a class="btn" href="index.html">Changer de thème</a>
+          </div>
+        </div>
+
+        <div class="card stats">
+          <h2>Progression</h2>
+          <dl id="stats-list" class="stats-list"></dl>
+          <button id="btn-reset" type="button" class="btn btn-quiet">Effacer ma progression</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Drapeaux : Wikimedia Commons — liste des États membres de l'ONU.</span>
+    </footer>
+
+    <script type="module" src="src/app-countries.js"></script>
+  </body>
+</html>
