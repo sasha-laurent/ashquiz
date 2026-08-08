@@ -14,6 +14,8 @@ export function createMap(container, model) {
   const paths = new Map();
   let listener = null;
   let locked = false;
+  // Mode carré : les seules zones cliquables, ou `null` si toute la carte l'est.
+  let allowed = null;
 
   for (const group of model.groups) {
     const g = document.createElementNS(SVG_NS, 'g');
@@ -57,6 +59,7 @@ export function createMap(container, model) {
     const target = event.target.closest('path.dept');
     if (!target) return;
     const code = target.dataset.code;
+    if (allowed && !allowed.has(code)) return;
     setClass('is-selected', code);
     listener?.(code);
   });
@@ -66,6 +69,19 @@ export function createMap(container, model) {
   function setClass(className, code) {
     for (const [key, list] of paths) {
       for (const path of list) path.classList.toggle(className, key === code);
+    }
+  }
+
+  /**
+   * Mode carré : surligne les seules zones proposées et rend les autres
+   * inertes. `null` rend toute la carte cliquable.
+   * @param {string[]|null} codes
+   */
+  function restrict(codes) {
+    allowed = codes ? new Set(codes) : null;
+    svg.classList.toggle('is-restricted', Boolean(allowed));
+    for (const [code, list] of paths) {
+      for (const path of list) path.classList.toggle('is-option', Boolean(allowed?.has(code)));
     }
   }
 
@@ -105,12 +121,17 @@ export function createMap(container, model) {
       clearClasses();
       setTitles(false);
       svg.classList.remove('is-locked');
+      restrict(null);
     },
+    restrict,
     /** Correction : on verrouille, on montre la bonne réponse et l'erreur. */
     reveal({ correct, given }) {
       locked = true;
       svg.classList.add('is-locked');
       clearClasses();
+      // La correction reprend toute la carte : le vert et le rouge se lisent
+      // mieux sans le surlignage des propositions par-dessus.
+      restrict(null);
       for (const path of paths.get(correct) || []) path.classList.add('is-correct');
       if (given && given !== correct) {
         for (const path of paths.get(given) || []) path.classList.add('is-wrong');

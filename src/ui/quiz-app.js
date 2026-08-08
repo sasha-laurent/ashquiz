@@ -10,7 +10,7 @@
 // `src/app.js`, `src/app-paintings.js`, `src/app-countries.js`.
 
 import { dateKey, humanDate } from '../lib/date.js';
-import { DAILY, PRACTICE, requestedMode } from '../lib/mode.js';
+import { DAILY, PRACTICE, carreEnabled, requestedMode, setCarreEnabled } from '../lib/mode.js';
 import { streak } from '../lib/storage.js';
 import { createThemeStore } from '../lib/themes.js';
 
@@ -35,7 +35,10 @@ const SCREENS = ['loading', 'error', 'quiz', 'summary'];
  *   `ctx.selection`
  * @param {(code: string, item: object) => boolean} [spec.filter]  restreint le tirage
  * @param {string} spec.resetPrompt  la confirmation avant effacement
- * @param {(item: object, ctx: object) => void} [spec.ask]  affiche l'énoncé
+ * @param {(item: object, ctx: object) => void} [spec.ask]  affiche l'énoncé. En
+ *   mode carré, `ctx.choices` porte les propositions de chaque sous-réponse :
+ *   celles des champs texte sont affichées ici, les autres (la carte, le siècle)
+ *   sont au thème
  * @param {(item: object, answer: object, ctx: object) => void} [spec.reveal]  dévoile
  *   la réponse sur l'énoncé
  * @param {(item: object) => Record<string, string>} spec.expected  réponse attendue,
@@ -76,14 +79,23 @@ export function startQuizApp(spec) {
 
   const run = {
     mode: DAILY,
+    seed: today,
     session: [],
     index: 0,
     answers: [],
     selection: null,
     revealed: false,
+    // Mode carré : les propositions de la question en cours, et celles que le
+    // joueur a cochées parmi les champs texte.
+    carre: false,
+    choices: null,
+    picked: {},
   };
 
   let quiz = spec.quiz ?? null;
+  // Par sous-réponse en texte libre : le bloc de propositions qui remplace la
+  // saisie en mode carré. Construit une fois, rempli à chaque question.
+  const choiceFields = new Map();
 
   /** Ce que le thème voit du déroulé en cours. */
   const ctx = {
@@ -97,13 +109,23 @@ export function startQuizApp(spec) {
     get revealed() {
       return run.revealed;
     },
+    get carre() {
+      return run.carre;
+    },
+    /** Les propositions de la question en cours, ou null hors mode carré. */
+    get choices() {
+      return run.choices;
+    },
     /** Enregistre la sous-réponse qui ne se saisit pas au clavier. */
     select(value) {
       run.selection = value;
     },
   };
 
+  let screen = 'loading';
+
   function show(name) {
+    screen = name;
     for (const [key, node] of Object.entries(screens)) node.hidden = key !== name;
   }
 
@@ -120,7 +142,10 @@ export function startQuizApp(spec) {
       }
     }
 
+    run.carre = quiz.hasChoices && carreEnabled();
+    buildChoiceFields();
     wireEvents();
+    syncCarreButton();
     await refreshStreak();
 
     const existing = startMode === DAILY ? await store.getDay(today) : null;
@@ -131,7 +156,110 @@ export function startQuizApp(spec) {
     }
   }
 
+  /**
+   * Le pendant « carré » de chaque champ texte : même libellé, quatre boutons à
+   * la place de la saisie. Il est glissé juste après le champ, et c'est l'un ou
+   * l'autre qui est affiché selon le mode.
+   */
+  function buildChoiceFields() {
+    if (!quiz.hasChoices) return;
+
+    for (const { key, label } of fields) {
+      if (!(key in inputs)) continue;
+      const field = el(inputs[key]).closest('.field');
+      if (!field) continue;
+
+      const box = document.createElement('div');
+      box.className = 'field choice-field';
+      box.hidden = true;
+
+      const title = document.createElement('span');
+      title.className = 'field-label';
+      title.id = `choices-${key}-label`;
+      // Le libellé du champ de saisie, quand il est plus explicite que celui de
+      // la correction (« Nom du département » plutôt que « Nom »).
+      title.textContent = field.querySelector('.field-label')?.textContent ?? label;
+
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid';
+      grid.setAttribute('role', 'radiogroup');
+      grid.setAttribute('aria-labelledby', title.id);
+
+      box.append(title, grid);
+      field.after(box);
+      choiceFields.set(key, { field, box, grid });
+    }
+  }
+
+  /** Les propositions d'un champ texte, ou rien si la question n'est pas au carré. */
+  function renderChoiceField(key) {
+    const slot = choiceFields.get(key);
+    if (!slot) return;
+
+    const choices = run.choices?.[key] ?? null;
+    slot.field.hidden = Boolean(choices);
+    slot.box.hidden = !choices;
+    if (!choices) return;
+
+    slot.grid.replaceChildren(
+      ...choices.values.map((value) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'choice';
+        button.dataset.value = String(value);
+        button.textContent = String(value);
+        button.setAttribute('role', 'radio');
+        button.setAttribute('aria-checked', 'false');
+        button.addEventListener('click', () => pickChoice(key, value));
+        return button;
+      }),
+    );
+  }
+
+  function pickChoice(key, value) {
+    if (run.revealed) return;
+    run.picked[key] = value;
+    for (const button of choiceFields.get(key).grid.children) {
+      const picked = button.dataset.value === String(value);
+      button.classList.toggle('is-picked', picked);
+      button.setAttribute('aria-checked', String(picked));
+    }
+  }
+
+  /** Correction d'un champ texte joué au carré : la bonne case, et l'erreur. */
+  function revealChoiceField(key) {
+    const choices = run.choices?.[key];
+    if (!choices) return;
+    const picked = run.picked[key];
+
+    for (const button of choiceFields.get(key).grid.children) {
+      button.disabled = true;
+      const value = button.dataset.value;
+      if (value === String(choices.correct)) button.classList.add('is-ok');
+      else if (picked !== undefined && value === String(picked)) button.classList.add('is-ko');
+    }
+  }
+
+  function toggleCarre() {
+    run.carre = !run.carre;
+    setCarreEnabled(run.carre);
+    syncCarreButton();
+    // Changer de mode en pleine série remet la série en jeu : les questions
+    // sont les mêmes (la graine n'a pas bougé), la façon d'y répondre non.
+    if (screen === 'quiz') startRun(run.mode);
+  }
+
+  function syncCarreButton() {
+    const button = el('btn-carre');
+    if (!button) return;
+    button.hidden = !quiz.hasChoices;
+    button.classList.toggle('is-on', run.carre);
+    button.setAttribute('aria-pressed', String(run.carre));
+  }
+
   function wireEvents() {
+    el('btn-carre')?.addEventListener('click', toggleCarre);
+
     el('answer-form').addEventListener('submit', (event) => {
       event.preventDefault();
       if (run.revealed) nextQuestion();
@@ -163,6 +291,7 @@ export function startQuizApp(spec) {
   function startRun(mode) {
     const seed = mode === DAILY ? today : `practice-${Date.now()}`;
     run.mode = mode;
+    run.seed = seed;
     run.session = quiz.buildSession(seed, filter);
     run.index = 0;
     run.answers = [];
@@ -175,11 +304,14 @@ export function startQuizApp(spec) {
     const item = run.session[run.index];
     run.selection = null;
     run.revealed = false;
+    run.picked = {};
+    run.choices = run.carre ? quiz.buildChoices(item, run.seed, filter) : null;
 
     for (const id of inputIds) {
       el(id).value = '';
       el(id).disabled = false;
     }
+    for (const key of choiceFields.keys()) renderChoiceField(key);
     el('feedback').hidden = true;
     el('feedback').replaceChildren();
     el('btn-validate').hidden = false;
@@ -188,6 +320,18 @@ export function startQuizApp(spec) {
     ask(item, ctx);
 
     renderProgress();
+    focusFirstAnswer();
+  }
+
+  /** La première chose à faire : saisir, ou cocher. */
+  function focusFirstAnswer() {
+    if (run.carre) {
+      for (const { key } of fields) {
+        const first = choiceFields.get(key)?.grid.firstElementChild;
+        if (first) return first.focus();
+      }
+      return;
+    }
     if (inputIds.length) el(inputIds[0]).focus();
   }
 
@@ -217,7 +361,11 @@ export function startQuizApp(spec) {
     const item = run.session[run.index];
     const given = {};
     for (const { key } of fields) {
-      given[key] = key in inputs ? el(inputs[key]).value : run.selection;
+      if (!(key in inputs)) given[key] = run.selection;
+      // Au carré, une proposition cochée vaut la saisie ; rien de coché vaut
+      // réponse vide, donc fausse.
+      else if (run.choices?.[key]) given[key] = run.picked[key] ?? '';
+      else given[key] = el(inputs[key]).value;
     }
 
     const answer = quiz.grade(item, given);
@@ -225,6 +373,7 @@ export function startQuizApp(spec) {
     run.revealed = true;
 
     for (const id of inputIds) el(id).disabled = true;
+    for (const key of choiceFields.keys()) revealChoiceField(key);
     reveal(item, answer, ctx);
 
     const answers = expected(item, ctx);
@@ -256,6 +405,7 @@ export function startQuizApp(spec) {
     const day = {
       date: run.mode === DAILY ? today : null,
       mode: run.mode,
+      carre: run.carre,
       answers: run.answers,
       score: quiz.totalScore(run.answers),
       max: quiz.maxScore(run.answers.length),
@@ -276,7 +426,10 @@ export function startQuizApp(spec) {
       : alreadyDone
         ? `Quiz du jour déjà fait — ${humanDate(today)}`
         : 'Quiz du jour terminé';
-    el('summary-score').textContent = `${day.score} / ${day.max} points`;
+    // Le mode carré est rappelé ici : 12 / 15 au clavier et 12 / 15 parmi quatre
+    // propositions ne se valent pas.
+    el('summary-score').textContent =
+      `${day.score} / ${day.max} points` + (day.carre ? ' · mode carré' : '');
 
     const list = el('summary-list');
     list.replaceChildren();

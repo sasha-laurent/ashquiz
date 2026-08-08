@@ -8,11 +8,16 @@ import { createPaintingQuiz } from './lib/quiz-paintings.js';
 import { THEMES_BY_ID } from './lib/themes.js';
 import { startQuizApp } from './ui/quiz-app.js';
 
-/** Les boutons de siècle, un par siècle représenté dans le corpus. */
+// Les siècles représentés dans le corpus : les boutons hors mode carré.
+let allCenturies = [];
+
+/** Les boutons de siècle : tout le corpus, ou les quatre du mode carré. */
 function renderCenturyChoices(centuries, ctx) {
   const box = ctx.el('centuries');
   box.replaceChildren();
-  for (const value of centuries) {
+  // Toujours dans l'ordre chronologique : la position d'un bouton ne doit rien
+  // dire de la réponse, même quand les quatre propositions sont tirées au sort.
+  for (const value of [...centuries].sort((a, b) => a - b)) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'century';
@@ -50,7 +55,7 @@ startQuizApp({
     const quiz = createPaintingQuiz(corpus.paintings);
     ctx.el('data-credit').textContent =
       `${corpus.paintings.length} œuvres — ${corpus.source ?? 'Wikidata'}.`;
-    renderCenturyChoices(quiz.centuries, ctx);
+    allCenturies = quiz.centuries;
     return quiz;
   },
 
@@ -66,11 +71,9 @@ startQuizApp({
     image.alt = 'Tableau à identifier';
     ctx.el('artwork-caption').textContent = '';
 
-    for (const button of ctx.el('centuries').children) {
-      button.disabled = false;
-      button.classList.remove('is-picked', 'is-ok', 'is-ko');
-      button.setAttribute('aria-checked', 'false');
-    }
+    // Au carré, le siècle se choisit entre quatre boutons seulement : ils sont
+    // retirés et remis à chaque question.
+    renderCenturyChoices(ctx.choices?.century?.values ?? allCenturies, ctx);
   },
 
   reveal(painting, answer, ctx) {

@@ -6,6 +6,7 @@
 // déroulé une fois ; un thème ne fournit plus que son corpus, ses sous-réponses
 // et ses alias (`src/lib/quiz.js`, `quiz-countries.js`, `quiz-paintings.js`).
 
+import { pickChoices } from './choices.js';
 import { makeRng, sample } from './rng.js';
 import { check, variants } from './text.js';
 
@@ -63,6 +64,11 @@ export function createAnswerIndex({ items, fields, accepted, ownerOf }) {
  * @param {Record<string, (item: object, given: unknown) => boolean>} [spec.choiceFields]
  *   sous-réponses qui ne se saisissent pas au clavier (la carte, le siècle) :
  *   pour chacune, le test de justesse.
+ * @param {Record<string, {correct?: Function, pool?: Function}>} [spec.choices]
+ *   mode carré, sous-réponse par sous-réponse : `correct(item)` donne la bonne
+ *   proposition (par défaut la première réponse acceptée) et `pool(item, {items,
+ *   index})` le vivier où prendre les leurres (par défaut la même sous-réponse
+ *   de tous les items). Une sous-réponse absente d'ici ne se joue pas au carré.
  * @param {(item: object) => string} [spec.distinctBy]  évite deux items de la
  *   même famille dans une série (deux œuvres du même peintre).
  * @param {number} [spec.questionsPerDay]
@@ -75,6 +81,7 @@ export function createQuiz({
   accepted,
   ownerOf = (field, item) => keyOf(item),
   choiceFields = {},
+  choices = {},
   distinctBy = null,
   questionsPerDay = QUESTIONS_PER_DAY,
 }) {
@@ -82,6 +89,15 @@ export function createQuiz({
   const pointsPerQuestion = fields.length;
   const byKey = new Map(items.map((item) => [keyOf(item), item]));
   const isOtherAnswer = createAnswerIndex({ items, fields: textFields, accepted, ownerOf });
+  const choiceSpecs = Object.entries(choices).map(([field, spec]) => {
+    const correct = spec.correct ?? ((item) => accepted(item, field)[0]);
+    return [field, { correct, pool: spec.pool ?? ((item, ctx) => ctx.items.map(correct)) }];
+  });
+
+  /** Le vivier du tirage : le corpus, moins ce que le thème écarte. */
+  function drawablePool(isDrawable) {
+    return isDrawable ? items.filter((item) => isDrawable(keyOf(item), item)) : items;
+  }
 
   /**
    * Série de questions déterministe pour une graine donnée.
@@ -90,7 +106,7 @@ export function createQuiz({
    *   optionnel (ex. présence sur la carte)
    */
   function buildSession(seed, isDrawable) {
-    const pool = isDrawable ? items.filter((item) => isDrawable(keyOf(item), item)) : items;
+    const pool = drawablePool(isDrawable);
     const rng = makeRng(`ashquiz:${namespace ? `${namespace}:` : ''}${seed}`);
     if (!distinctBy) return sample(pool, questionsPerDay, rng);
 
@@ -111,6 +127,33 @@ export function createQuiz({
       if (!kept.includes(item)) kept.push(item);
     }
     return kept;
+  }
+
+  /**
+   * Les propositions du mode carré pour une question : par sous-réponse, la
+   * bonne réponse noyée parmi des leurres.
+   *
+   * Le tirage est déterministe comme celui de la série : mêmes graine et item,
+   * mêmes propositions dans le même ordre — recharger la page ne redistribue
+   * rien.
+   *
+   * @param {object} item  item de la question
+   * @param {string} seed  la même graine que `buildSession`
+   * @param {(code: string, item: object) => boolean} [isDrawable]  le même filtre
+   * @returns {Record<string, {values: unknown[], correct: unknown}>}
+   */
+  function buildChoices(item, seed, isDrawable) {
+    const pool = drawablePool(isDrawable);
+    const index = pool.findIndex((other) => keyOf(other) === keyOf(item));
+    const out = {};
+
+    for (const [field, spec] of choiceSpecs) {
+      const rng = makeRng(`ashquiz:choices:${namespace}:${seed}:${keyOf(item)}:${field}`);
+      const correct = spec.correct(item);
+      const values = pickChoices({ correct, pool: spec.pool(item, { items: pool, index }), rng });
+      out[field] = { values, correct };
+    }
+    return out;
   }
 
   /**
@@ -141,7 +184,10 @@ export function createQuiz({
     fields,
     questionsPerDay,
     pointsPerQuestion,
+    /** Le thème sait-il proposer des réponses ? Sinon, pas de mode carré. */
+    hasChoices: choiceSpecs.length > 0,
     buildSession,
+    buildChoices,
     grade,
     totalScore,
     maxScore: (count = questionsPerDay) => count * pointsPerQuestion,

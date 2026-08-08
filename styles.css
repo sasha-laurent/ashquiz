@@ -30,6 +30,12 @@
   box-sizing: border-box;
 }
 
+/* `hidden` doit l'emporter sur les `display` posés plus bas : c'est ce qui
+   escamote un écran, un badge ou, en mode carré, un champ de saisie. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -92,6 +98,28 @@ main {
 
 .badge-practice {
   color: var(--accent);
+}
+
+.toggle {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  border-color: var(--accent);
+}
+
+.toggle.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
 }
 
 .muted {
@@ -224,6 +252,67 @@ main {
   opacity: 0.75;
 }
 
+/* Propositions à cocher : les quatre du mode carré, les siècles des tableaux. */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.century,
+.choice {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.century:hover:not(:disabled),
+.choice:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.century:disabled,
+.choice:disabled {
+  cursor: default;
+}
+
+.century.is-picked,
+.choice.is-picked {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+
+.century.is-ok,
+.choice.is-ok {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 22%, transparent);
+  color: var(--ok);
+  opacity: 1;
+}
+
+.century.is-ko,
+.choice.is-ko {
+  border-color: var(--ko);
+  background: color-mix(in srgb, var(--ko) 18%, transparent);
+  color: var(--ko);
+  opacity: 1;
+}
+
+/* Une proposition est un libellé, pas une étiquette : elle peut être longue. */
+.choice {
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
 .map-instruction {
   margin: 18px 0 4px;
 }
@@ -351,6 +440,26 @@ a.btn {
 
 .map.is-locked .dept {
   cursor: default;
+}
+
+/* Mode carré : seules les zones proposées répondent au clic. */
+.dept.is-option {
+  fill: color-mix(in srgb, var(--accent) 45%, var(--land));
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  paint-order: stroke;
+}
+
+.map:not(.is-locked) .dept.is-option:hover {
+  fill: var(--accent);
+}
+
+.map.is-restricted .dept:not(.is-option) {
+  cursor: default;
+}
+
+.map.is-restricted:not(.is-locked) .dept:not(.is-option):hover {
+  fill: var(--land);
 }
 
 .dept.is-selected {
@@ -619,45 +728,6 @@ a.btn {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 4px;
-}
-
-.century {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.century:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.century:disabled {
-  cursor: default;
-}
-
-.century.is-picked {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  color: var(--text);
-}
-
-.century.is-ok {
-  border-color: var(--ok);
-  background: color-mix(in srgb, var(--ok) 22%, transparent);
-  color: var(--ok);
-  opacity: 1;
-}
-
-.century.is-ko {
-  border-color: var(--ko);
-  background: color-mix(in srgb, var(--ko) 18%, transparent);
-  color: var(--ko);
-  opacity: 1;
 }
 
 .artwork {
