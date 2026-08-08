@@ -103,6 +103,14 @@ titre et du peintre réutilise `src/lib/text.js` : mêmes tolérances, et même 
 passe pas pour « Monet », le titre exact d'une autre œuvre n'est jamais accepté comme faute de
 frappe). La série du jour évite de tirer deux fois le même peintre.
 
+Pour le peintre, le **nom de famille seul suffit** : « Monet » pour Claude Monet, « van Gogh » (ou
+« Gogh ») pour Vincent van Gogh, « Brueghel » pour Pieter Brueghel l'Ancien. Les formes courtes sont
+dérivées du nom complet (`shortNames`, dans `src/lib/quiz-paintings.js`) : tout ce qui suit le
+prénom, particules comprises, en écartant le qualificatif final. Une particule ou un qualificatif
+isolé (« de », « l'Ancien ») ne vaut pas réponse, et ces formes courtes comptent comme les autres
+dans le garde-fou : « Renoir » ne passera jamais pour un autre peintre au titre de la faute de
+frappe.
+
 ### Corpus des œuvres
 
 `npm run build:paintings` écrit `data/tableaux.json` à partir de [Wikidata](https://www.wikidata.org)
