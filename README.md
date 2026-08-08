@@ -1,6 +1,14 @@
 # Ashquiz
 
-Petits quiz de révision quotidiens. Premier thème : **les départements et préfectures français**.
+Petits quiz de révision quotidiens. Deux thèmes :
+
+- **Départements et préfectures français** (`index.html`) ;
+- **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle.
+
+Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
+consécutifs.
+
+## Départements et préfectures
 
 Chaque jour, cinq questions. Pour chacune, on part du numéro de département et il faut donner :
 
@@ -15,9 +23,10 @@ affichent le même quiz le même jour.
 ## Démarrer en local
 
 ```sh
-npm run build:map   # une fois : télécharge le fond de carte dans data/
-npm run dev         # http://localhost:8080
-npm test            # tests unitaires (aucune dépendance)
+npm run build:map        # une fois : télécharge le fond de carte dans data/
+npm run build:paintings  # une fois : télécharge la liste des œuvres dans data/
+npm run dev              # http://localhost:8080
+npm test                 # tests unitaires (aucune dépendance)
 ```
 
 Il n'y a **aucune étape de build** et aucune dépendance npm : ce sont des fichiers statiques et des
@@ -73,14 +82,57 @@ un backend plus tard consistera à écrire un autre adaptateur, sans toucher au 
 En dehors du quiz du jour, le bouton **Entraînement libre** relance une série aléatoire qui ne
 compte pas dans les statistiques.
 
+## Tableaux
+
+Cinq œuvres par jour. Pour chacune, l'image est affichée et il faut donner :
+
+1. le **titre** de l'œuvre,
+2. son **peintre**,
+3. son **siècle**, en cliquant l'un des boutons proposés.
+
+Un point par sous-réponse, soit 15 points par jour, comme pour les départements. La correction du
+titre et du peintre réutilise `src/lib/text.js` : mêmes tolérances, et même garde-fou (« Manet » ne
+passe pas pour « Monet », le titre exact d'une autre œuvre n'est jamais accepté comme faute de
+frappe). La série du jour évite de tirer deux fois le même peintre.
+
+### Corpus des œuvres
+
+`npm run build:paintings` écrit `data/tableaux.json` à partir de [Wikidata](https://www.wikidata.org)
+(métadonnées en CC0, images hébergées sur Wikimedia Commons).
+
+Wikidata décrit plus d'un million de peintures ; filtrer ce corpus par notoriété fait tomber
+l'endpoint SPARQL public en timeout. L'outil part donc d'une liste d'une cinquantaine de peintres
+(déclarée en tête de `tools/build-paintings.mjs`) et interroge leurs œuvres par lots — ce qui donne
+de toute façon ce qu'on veut pour un quiz : un canon, pas un tirage au hasard. Sont retenues les
+œuvres ayant une image sur Commons, une date, un titre français et au moins huit articles Wikipédia,
+plafonnées à huit par peintre pour que Monet et Van Gogh n'écrasent pas le tirage.
+
+Deux conséquences à connaître :
+
+- **le corpus penche vers l'art ancien.** Seules les images libres sortent ; les peintres du
+  XXe siècle encore sous droits (Frida Kahlo, une bonne partie de Picasso ou Dalí) n'en ont
+  pratiquement pas sur Commons ;
+- **les images sont chargées depuis Commons à l'exécution**, pas vendorisées : le fichier écrit ne
+  contient que des métadonnées (~110 ko). Le nom de fichier Commons apparaît donc dans l'onglet
+  réseau du navigateur, et contient souvent le titre de l'œuvre — un curieux déterminé peut y lire
+  la réponse.
+
+Relancer la commande régénère le fichier : c'est le seul moyen de faire évoluer la liste des œuvres,
+il n'y a rien à modifier dans le code.
+
 ## Ajouter un thème plus tard
 
-Le code est découpé pour ça :
+Le code est découpé pour ça, et le thème « tableaux » sert d'exemple :
 
-- `src/data/` — les données du thème ;
-- `src/lib/quiz.js` — tirage de la série et notation, sans DOM ;
+- `src/data/`, ou un fichier de `data/` produit par un outil de `tools/` — les données du thème ;
+- `src/lib/quiz.js`, `src/lib/quiz-paintings.js` — tirage de la série et notation, sans DOM ;
 - `src/lib/text.js`, `src/lib/rng.js`, `src/lib/storage.js` — briques réutilisables telles quelles ;
-- `src/ui/`, `src/app.js` — l'écran, spécifique au thème « départements ».
+- `src/ui/`, `src/app.js`, `src/app-paintings.js` — l'écran, spécifique à un thème.
+
+`createStore(adapter, { statsKey })` et `createLocalAdapter({ key, statsKey })` isolent la
+progression d'un thème de celle des autres : une clé `localStorage` par thème. Les statistiques par
+item sont agrégées à partir des sous-réponses corrigées, sans que `storage.js` ait à connaître leurs
+noms.
 
 ## Déploiement
 
