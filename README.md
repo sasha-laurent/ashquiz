@@ -188,15 +188,40 @@ de requêtes, et relancer la commande reprend simplement les manquants.
 
 ## Ajouter un thème plus tard
 
-Le code est découpé pour ça, et les thèmes déjà là servent d'exemples :
+Les trois thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
+caractéristiques » — et ce déroulé n'est écrit qu'une fois. Un thème ne décrit que ce qui lui est
+propre ; les deux briques communes s'occupent du reste :
 
-- `src/data/`, ou un fichier de `data/` produit par un outil de `tools/` — les données du thème ;
-- `src/lib/quiz.js`, `src/lib/quiz-paintings.js`, `src/lib/quiz-countries.js` — tirage de la série
-  et notation, sans DOM ;
-- `src/lib/text.js`, `src/lib/rng.js`, `src/lib/storage.js` — briques réutilisables telles quelles ;
-- `src/ui/`, `src/app.js`, `src/app-paintings.js`, `src/app-countries.js` — l'écran, spécifique à un
-  thème ;
-- `src/lib/themes.js` — le catalogue : une entrée par thème (nom, icône, page, clé de stockage).
+- **`src/lib/quiz-core.js`** — la logique de jeu, sans DOM. `createQuiz({ items, textFields,
+  accepted, choiceFields… })` rend un quiz complet : série du jour déterministe, correction, un
+  point par sous-réponse juste, et le garde-fou qui refuse la tolérance aux fautes de frappe à une
+  saisie qui est exactement la réponse d'un autre item. `weakest()` en tire le « À revoir » de
+  l'écran de résultat ;
+- **`src/ui/quiz-app.js`** — l'écran. `startQuizApp({ theme, fields, inputs… })` tient la barre de
+  progression, l'enchaînement des questions, la correction affichée, le résultat, les statistiques,
+  l'entraînement libre et la persistance. Le thème ne fournit que sa question (`ask`) et sa
+  correction visuelle (`reveal`).
+
+Restent, par thème : `src/lib/quiz-<thème>.js` (le corpus et ses sous-réponses),
+`src/app-<thème>.js` (une centaine de lignes de DOM propre au thème) et sa page HTML. Les briques
+`src/lib/text.js`, `rng.js`, `storage.js` et `date.js` se réutilisent telles quelles.
+
+Concrètement, pour un quatrième thème :
+
+1. **les données** — un module de `src/data/` ou un fichier de `data/` produit par un outil de
+   `tools/` ;
+2. **`src/lib/quiz-<thème>.js`** — un appel à `createQuiz` : les champs en texte libre, la fonction
+   `accepted` qui dit les réponses valables, et éventuellement un `choiceFields` pour ce qui se
+   répond au clic (la carte, le siècle) ;
+3. **`<thème>.html`** — le squelette d'une page existante, en gardant les identifiants attendus
+   (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) ;
+4. **`src/app-<thème>.js`** — l'appel à `startQuizApp` ;
+5. **une entrée dans `THEMES`** (`src/lib/themes.js`).
+
+Un point à ne pas manquer : le `namespace` passé à `createQuiz` entre dans la graine du tirage. Il
+distingue les thèmes entre eux — sans lui, deux thèmes de même taille poseraient les mêmes questions
+le même jour — mais **le changer une fois le thème en ligne rebattrait les cartes de tout le
+monde**.
 
 Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays) :
 un module JS importé normalement, modifiable à la main, et les outils de `tools/` ne servent qu'aux
