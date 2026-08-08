@@ -1,12 +1,17 @@
 # Ashquiz
 
-Petits quiz de révision quotidiens. Deux thèmes :
+Petits quiz de révision quotidiens. La page d'accueil (`index.html`) est un menu : un bloc par
+thème, avec son quiz du jour et son entraînement libre.
 
-- **Départements et préfectures français** (`index.html`) ;
+Deux thèmes pour l'instant :
+
+- **Départements et préfectures français** (`departements.html`) ;
 - **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
-consécutifs.
+consécutifs. Le menu affiche, pour chacun, si la série du jour est faite et la série de jours en
+cours ; une fois le quiz du jour terminé, c'est l'entraînement libre qui devient l'action mise en
+avant.
 
 ## Départements et préfectures
 
@@ -79,8 +84,11 @@ département, série de jours consécutifs. La persistance est isolée derrière
 (`src/lib/storage.js`) avec trois méthodes `read` / `write` / `clear`, toutes asynchrones : brancher
 un backend plus tard consistera à écrire un autre adaptateur, sans toucher au reste du code.
 
-En dehors du quiz du jour, le bouton **Entraînement libre** relance une série aléatoire qui ne
-compte pas dans les statistiques.
+En dehors du quiz du jour, l'**entraînement libre** tire une série aléatoire qui ne compte pas dans
+les statistiques. On y accède depuis le menu ou depuis l'écran de résultat ; le lien du menu ajoute
+`?mode=libre` à l'adresse du thème (`departements.html?mode=libre`), ce qui saute la série du jour
+même si elle n'est pas encore faite. Sans ce paramètre, une page de thème ouvre toujours le quiz du
+jour — ou son résultat s'il est déjà joué.
 
 ## Tableaux
 
@@ -127,7 +135,12 @@ Le code est découpé pour ça, et le thème « tableaux » sert d'exemple :
 - `src/data/`, ou un fichier de `data/` produit par un outil de `tools/` — les données du thème ;
 - `src/lib/quiz.js`, `src/lib/quiz-paintings.js` — tirage de la série et notation, sans DOM ;
 - `src/lib/text.js`, `src/lib/rng.js`, `src/lib/storage.js` — briques réutilisables telles quelles ;
-- `src/ui/`, `src/app.js`, `src/app-paintings.js` — l'écran, spécifique à un thème.
+- `src/ui/`, `src/app.js`, `src/app-paintings.js` — l'écran, spécifique à un thème ;
+- `src/lib/themes.js` — le catalogue : une entrée par thème (nom, icône, page, clé de stockage).
+
+Ajouter une entrée à `THEMES` suffit à faire apparaître le thème dans le menu, avec ses deux
+boutons et son état du jour : `src/app-menu.js` ne connaît rien du contenu des thèmes, il lit leur
+progression par la clé déclarée là.
 
 `createStore(adapter, { statsKey })` et `createLocalAdapter({ key, statsKey })` isolent la
 progression d'un thème de celle des autres : une clé `localStorage` par thème. Les statistiques par

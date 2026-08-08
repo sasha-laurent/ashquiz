@@ -3,8 +3,10 @@
 import { BY_CODE } from './data/departments.js';
 import { dateKey, humanDate } from './lib/date.js';
 import { buildMapModel, loadGeojson } from './lib/geo.js';
+import { DAILY, requestedMode } from './lib/mode.js';
 import { buildSession, grade, maxScore, totalScore } from './lib/quiz.js';
-import { createStore, streak } from './lib/storage.js';
+import { streak } from './lib/storage.js';
+import { THEMES_BY_ID, createThemeStore } from './lib/themes.js';
 import { createMap } from './ui/map.js';
 
 const el = (id) => document.getElementById(id);
@@ -16,8 +18,10 @@ const screens = {
   summary: el('screen-summary'),
 };
 
-const store = createStore();
+const store = createThemeStore(THEMES_BY_ID.get('departements'));
 const today = dateKey();
+// `?mode=libre` (le bouton « Entraînement libre » du menu) saute la série du jour.
+const startMode = requestedMode(location.search);
 
 const run = {
   mode: 'daily',
@@ -60,11 +64,11 @@ async function main() {
   wireEvents();
   await refreshStreak();
 
-  const existing = await store.getDay(today);
+  const existing = startMode === DAILY ? await store.getDay(today) : null;
   if (existing) {
     await showSummary(existing, { alreadyDone: true });
   } else {
-    startRun('daily');
+    startRun(startMode);
   }
 }
 
@@ -90,7 +94,7 @@ function wireEvents() {
     if (!confirm('Effacer toute la progression enregistrée sur cet appareil ?')) return;
     await store.reset();
     await refreshStreak();
-    startRun('daily');
+    startRun(startMode);
   });
 }
 
