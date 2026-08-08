@@ -34,7 +34,7 @@ export const POINTS_PER_QUESTION = 3;
  */
 export function buildSession(seed, isDrawable = () => true) {
   const pool = DEPARTMENTS.filter((dep) => isDrawable(dep.code));
-  const rng = makeRng(`quotiquiz:${seed}`);
+  const rng = makeRng(`ashquiz:${seed}`);
   return sample(pool, QUESTIONS_PER_DAY, rng);
 }
 

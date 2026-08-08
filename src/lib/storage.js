@@ -4,7 +4,10 @@
 
 import { dateKey } from './date.js';
 
-const KEY = 'quotiquiz.v1';
+const KEY = 'ashquiz.v1';
+// Ancien nom du site : on relit cette clé une fois pour ne pas perdre la
+// progression déjà enregistrée. À supprimer dans quelques mois.
+const LEGACY_KEY = 'quotiquiz.v1';
 
 const empty = () => ({ version: 1, days: {}, departments: {} });
 
@@ -12,7 +15,7 @@ const empty = () => ({ version: 1, days: {}, departments: {} });
 export const localAdapter = {
   async read() {
     try {
-      const raw = localStorage.getItem(KEY);
+      const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
       if (!raw) return empty();
       const data = JSON.parse(raw);
       return { ...empty(), ...data };
@@ -23,6 +26,7 @@ export const localAdapter = {
   async write(data) {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
+      localStorage.removeItem(LEGACY_KEY);
     } catch {
       /* quota plein ou mode privé : on continue sans persistance */
     }
@@ -30,6 +34,7 @@ export const localAdapter = {
   async clear() {
     try {
       localStorage.removeItem(KEY);
+      localStorage.removeItem(LEGACY_KEY);
     } catch {
       /* ignore */
     }

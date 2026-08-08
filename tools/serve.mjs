@@ -43,5 +43,5 @@ createServer(async (request, response) => {
   });
   createReadStream(file).pipe(response);
 }).listen(PORT, () => {
-  process.stdout.write(`Quotiquiz : http://localhost:${PORT}\n`);
+  process.stdout.write(`Ashquiz : http://localhost:${PORT}\n`);
 });
