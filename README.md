@@ -1,4 +1,4 @@
-# Quotiquiz
+# Ashquiz
 
 Petits quiz de révision quotidiens. Premier thème : **les départements et préfectures français**.
 
