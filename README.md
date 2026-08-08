@@ -73,6 +73,52 @@ un backend plus tard consistera à écrire un autre adaptateur, sans toucher au 
 En dehors du quiz du jour, le bouton **Entraînement libre** relance une série aléatoire qui ne
 compte pas dans les statistiques.
 
+## Thème « tableaux célèbres » (données prêtes, écran à faire)
+
+Le corpus vit dans `src/data/paintings.js` : 113 tableaux, 58 artistes, de 1432
+(*L'Agneau mystique*) à 1930 (*American Gothic*). Chaque entrée porte le titre,
+l'auteur, la datation et le lieu de conservation.
+
+```sh
+npm run build:paintings   # résout chaque tableau, télécharge les images
+```
+
+Le script écrit `data/paintings/` (une image par tableau) et `data/paintings.json`
+(identifiant Wikidata, crédits, licence, URL distante de secours). Compter
+environ 20 Mo à 1000 px de large ; `WIDTH=700 npm run build:paintings` réduit à
+peu près de moitié.
+
+### Pourquoi Wikidata plutôt qu'un musée
+
+Les API de musée (Met, Art Institute of Chicago, Rijksmuseum) sont excellentes
+mais ne contiennent que leur propre collection. Le canon visé est par nature
+multi-musées : Louvre, Orsay, Prado, Rijksmuseum, Offices, Oslo. Wikidata est le
+seul index qui les couvre toutes, avec un modèle stable (`P170` auteur, `P571`
+date, `P18` image) et les reproductions hébergées sur Wikimedia Commons.
+
+La liste, elle, est tenue à la main : un classement automatique par notoriété
+(nombre de Wikipédias liées) produit un corpus déséquilibré, très centré
+Renaissance italienne, mêlé de doublons et d'œuvres qui ne sont pas des tableaux.
+Wikidata sert donc d'arbitre plutôt que de source : `build:paintings` vérifie que
+l'entité trouvée est bien un tableau du bon auteur, et **signale tout écart de
+datation** avec la valeur écrite à la main, sans jamais corriger en silence.
+
+### Domaine public seulement
+
+Le corpus s'arrête aux auteurs morts avant 1950, avec une marge sur la règle
+française des 70 ans après la mort. C'est ce qui exclut Picasso, Dalí, Magritte,
+Hopper, Kahlo et Matisse : *Guernica*, *La Persistance de la mémoire* et
+*Nighthawks* sont dans la culture générale de tout le monde, mais pas
+publiables ici. Un test (`tests/paintings.test.mjs`) garde la limite.
+
+### Corriger les réponses
+
+Le titre et l'auteur passent par `src/lib/text.js`, comme les départements. La
+date demande une règle à part : beaucoup d'œuvres sont datées par fourchette
+(*La Joconde*, 1503-1519) ou de façon incertaine, donc une comparaison exacte
+serait injuste. D'où `year` + `yearEnd` dans les données, et une tolérance à
+définir à l'écriture de l'écran.
+
 ## Ajouter un thème plus tard
 
 Le code est découpé pour ça :
