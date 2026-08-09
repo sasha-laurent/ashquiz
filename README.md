@@ -108,25 +108,29 @@ journées jouées au carré — le barème, lui, ne bouge pas.
 Les leurres sont tirés de façon déterministe, comme la série : mêmes jour et question, mêmes
 propositions dans le même ordre. Recharger la page ne redistribue rien.
 
-Ce qui est proposé dépend de la sous-réponse, et c'est là tout l'intérêt :
+Ce qui est proposé dépend du thème, et c'est là tout l'intérêt.
 
-- **nom d'un département** — la bonne réponse et trois départements de **numéro voisin (à ±3)**.
-  Les numéros suivant l'ordre alphabétique des noms, ce sont les confusions à travailler : le 45 se
-  choisit entre Loiret, Loire-Atlantique et Haute-Loire, pas entre Loiret et Vaucluse ;
-- **préfecture** — quatre villes quelconques : les préfectures n'ont pas d'ordre à exploiter ;
-- **position sur la carte** — quatre zones surlignées, seules cliquables, tirées au hasard sur toute
-  la carte. Elles n'ont aucun rapport avec les noms proposés juste au-dessus : sans quoi une
-  sous-réponse livrerait l'autre ;
-- **tableaux** (titre, peintre, siècle) et **drapeaux** (pays, capitale) — quatre propositions
-  quelconques prises dans le corpus. Les siècles restent rangés dans l'ordre chronologique : la
-  position d'un bouton ne doit rien dire de la réponse.
+**Départements** — les trois sous-réponses portent sur **les mêmes quatre départements** : les noms
+proposés, leurs préfectures et les quatre zones surlignées sur la carte se répondent. La question
+devient « lequel de ces quatre ? », posée trois fois : relier un numéro à un nom, ce nom à sa
+préfecture, puis à sa place sur la carte. Ces quatre-là sont la bonne réponse et trois départements
+de **numéro voisin (à ±3)** ; les numéros suivant l'ordre alphabétique des noms, ce sont les
+confusions qui valent la peine — le 45 se choisit entre Loiret, Loire-Atlantique et Haute-Loire, pas
+entre Loiret et Vaucluse. Seul **l'ordre d'affichage** est retiré pour chaque sous-réponse : sans
+quoi reconnaître le nom livrerait la position de la préfecture et de la zone à cliquer.
 
-Côté code, un thème déclare ces règles dans son `createQuiz` (`choices`), et le noyau
-(`src/lib/choices.js`, `src/lib/quiz-core.js`) se charge du reste : écarter les leurres qui se
-lisent comme la bonne réponse (« St Etienne » à côté de « Saint-Étienne » ferait deux cases justes),
-respecter le filtre de tirage du thème (une zone absente du fond de carte n'est jamais proposée) et
-mélanger. Une sous-réponse cochée est corrigée exactement comme une réponse tapée, et ne rien cocher
-vaut ne rien répondre.
+**Tableaux** (titre, peintre, siècle) et **drapeaux** (pays, capitale) — quatre propositions
+quelconques prises dans le corpus, tirées indépendamment pour chaque sous-réponse : rien n'y
+rapproche deux œuvres ou deux pays comme le numéro rapproche deux départements. Les siècles restent
+rangés dans l'ordre chronologique : la position d'un bouton ne doit rien dire de la réponse.
+
+Côté code, un thème déclare ces règles dans son `createQuiz` : `choices` dit, par sous-réponse, la
+bonne proposition et le vivier des leurres ; `choiceItems` — celui des départements — dit que toutes
+les sous-réponses tirent d'un même quatuor d'items. Le noyau (`src/lib/choices.js`,
+`src/lib/quiz-core.js`) se charge du reste : écarter les leurres qui se lisent comme la bonne réponse
+(« St Etienne » à côté de « Saint-Étienne » ferait deux cases justes), respecter le filtre de tirage
+du thème (une zone absente du fond de carte n'est jamais proposée) et mélanger. Une sous-réponse
+cochée est corrigée exactement comme une réponse tapée, et ne rien cocher vaut ne rien répondre.
 
 ## Tableaux
 

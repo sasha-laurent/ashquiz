@@ -88,20 +88,31 @@ test('les noms proposés sont des départements de numéro voisin', () => {
   }
 });
 
-test('les préfectures et les zones de carte proposées sont, elles, quelconques', () => {
-  const prefectures = new Set(DEPARTMENTS.map((dep) => dep.prefecture));
-  const codes = new Set(DEPARTMENTS.map((dep) => dep.code));
-  const isere = BY_CODE.get('38');
-  const choices = QUIZ.buildChoices(isere, '2026-08-08');
+test('les trois sous-réponses parlent des mêmes quatre départements', () => {
+  // La préfecture proposée est celle d'un département proposé, et la carte
+  // surligne ces quatre-là : la question est « lequel de ces quatre ? », posée
+  // trois fois.
+  for (const dep of DEPARTMENTS) {
+    const { name, prefecture, map } = QUIZ.buildChoices(dep, '2026-08-08');
+    const proposed = map.values.map((code) => BY_CODE.get(code));
 
-  for (const value of choices.prefecture.values) assert.ok(prefectures.has(value));
-  for (const value of choices.map.values) assert.ok(codes.has(value));
+    assert.deepEqual(new Set(name.values), new Set(proposed.map((d) => d.name)), dep.code);
+    assert.deepEqual(
+      new Set(prefecture.values),
+      new Set(proposed.map((d) => d.prefecture)),
+      dep.code,
+    );
+  }
+});
 
-  // Rien n'oblige les leurres de la carte à être ceux des noms : ce sont deux
-  // tirages indépendants.
-  const proches = neighbours(DEPARTMENTS, DEPARTMENTS.indexOf(isere), 3);
-  const voisins = new Set(proches.map((d) => d.code));
-  assert.ok(choices.map.values.some((code) => code !== isere.code && !voisins.has(code)));
+test("l'ordre d'affichage, lui, est propre à chaque sous-réponse", () => {
+  // Sinon, reconnaître le nom livrerait la position de la préfecture et de la
+  // zone à cliquer.
+  const alignés = DEPARTMENTS.filter((dep) => {
+    const { name, map } = QUIZ.buildChoices(dep, '2026-08-08');
+    return name.values.every((value, i) => value === BY_CODE.get(map.values[i]).name);
+  });
+  assert.ok(alignés.length < 10, `${alignés.length} départements alignent leurs sous-réponses`);
 });
 
 test('le filtre de tirage vaut aussi pour les propositions', () => {
