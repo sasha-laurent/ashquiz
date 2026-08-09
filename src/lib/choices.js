@@ -8,7 +8,7 @@
 // Le tirage reste déterministe : la graine du jour donne toujours les mêmes
 // propositions, comme elle donne toujours les mêmes questions.
 
-import { sample } from './rng.js';
+import { sample, shuffle } from './rng.js';
 import { normalize } from './text.js';
 
 export const CHOICES_PER_QUESTION = 4;
@@ -45,8 +45,7 @@ export function pickChoices({
     decoys.push(value);
   }
 
-  const drawn = [correct, ...sample(decoys, count - 1, rng)];
-  return sample(drawn, drawn.length, rng);
+  return shuffle([correct, ...sample(decoys, count - 1, rng)], rng);
 }
 
 /**

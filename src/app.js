@@ -49,12 +49,12 @@ startQuizApp({
   ask(dep, ctx) {
     ctx.el('q-code').textContent = dep.code;
     map.reset();
-    // Au carré, quatre zones seulement sont surlignées et cliquables — tirées au
-    // hasard sur toute la carte, sans rapport avec les noms proposés plus haut.
+    // Au carré, seules sont cliquables les zones des quatre départements
+    // proposés plus haut — dans un autre ordre, mais ce sont les mêmes.
     const zones = ctx.choices?.map;
     if (zones) map.restrict(zones.values);
     ctx.el('map-hint').textContent = zones
-      ? "Clique l'un des quatre départements en surbrillance."
+      ? "Clique le bon parmi les quatre départements en surbrillance (les mêmes qu'au-dessus)."
       : 'Clique le département sur la carte.';
     ctx.el('map-hint').classList.remove('hint-set');
   },

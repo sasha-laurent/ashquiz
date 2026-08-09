@@ -7,7 +7,7 @@
 // et ses alias (`src/lib/quiz.js`, `quiz-countries.js`, `quiz-paintings.js`).
 
 import { pickChoices } from './choices.js';
-import { makeRng, sample } from './rng.js';
+import { makeRng, sample, shuffle } from './rng.js';
 import { check, variants } from './text.js';
 
 export const QUESTIONS_PER_DAY = 5;
@@ -69,6 +69,10 @@ export function createAnswerIndex({ items, fields, accepted, ownerOf }) {
  *   proposition (par défaut la première réponse acceptée) et `pool(item, {items,
  *   index})` le vivier où prendre les leurres (par défaut la même sous-réponse
  *   de tous les items). Une sous-réponse absente d'ici ne se joue pas au carré.
+ * @param {(item: object, ctx: object) => object[]} [spec.choiceItems]  mode carré,
+ *   quand les sous-réponses doivent parler des mêmes items : le vivier d'items
+ *   parmi lesquels tirer les leurres, une fois pour toute la question. Chaque
+ *   sous-réponse y lit alors sa propre valeur, et `pool` n'a plus lieu d'être.
  * @param {(item: object) => string} [spec.distinctBy]  évite deux items de la
  *   même famille dans une série (deux œuvres du même peintre).
  * @param {number} [spec.questionsPerDay]
@@ -82,6 +86,7 @@ export function createQuiz({
   ownerOf = (field, item) => keyOf(item),
   choiceFields = {},
   choices = {},
+  choiceItems = null,
   distinctBy = null,
   questionsPerDay = QUESTIONS_PER_DAY,
 }) {
@@ -133,6 +138,11 @@ export function createQuiz({
    * Les propositions du mode carré pour une question : par sous-réponse, la
    * bonne réponse noyée parmi des leurres.
    *
+   * Avec `choiceItems`, les leurres sont les mêmes items d'une sous-réponse à
+   * l'autre — les départements proposés, leurs préfectures et leurs zones sur la
+   * carte se répondent. Seul l'ordre d'affichage est retiré par sous-réponse :
+   * sinon, reconnaître une réponse livrerait la position des deux autres.
+   *
    * Le tirage est déterministe comme celui de la série : mêmes graine et item,
    * mêmes propositions dans le même ordre — recharger la page ne redistribue
    * rien.
@@ -145,12 +155,23 @@ export function createQuiz({
   function buildChoices(item, seed, isDrawable) {
     const pool = drawablePool(isDrawable);
     const index = pool.findIndex((other) => keyOf(other) === keyOf(item));
-    const out = {};
+    const rngFor = (part) =>
+      makeRng(`ashquiz:choices:${namespace}:${seed}:${keyOf(item)}:${part}`);
+    const ctx = { items: pool, index };
 
+    // Le quatuor d'items dont toutes les sous-réponses parleront, quand le thème
+    // en demande un.
+    const peers = choiceItems
+      ? pickChoices({ correct: item, pool: choiceItems(item, ctx), rng: rngFor('items'), keyOf })
+      : null;
+
+    const out = {};
     for (const [field, spec] of choiceSpecs) {
-      const rng = makeRng(`ashquiz:choices:${namespace}:${seed}:${keyOf(item)}:${field}`);
+      const rng = rngFor(field);
       const correct = spec.correct(item);
-      const values = pickChoices({ correct, pool: spec.pool(item, { items: pool, index }), rng });
+      const values = peers
+        ? shuffle(peers.map(spec.correct), rng)
+        : pickChoices({ correct, pool: spec.pool(item, ctx), rng });
       out[field] = { values, correct };
     }
     return out;

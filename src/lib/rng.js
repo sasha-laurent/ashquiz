@@ -24,6 +24,11 @@ export function makeRng(seed) {
   };
 }
 
+/** Mélange une liste, sans la modifier. */
+export function shuffle(items, rng) {
+  return sample(items, items.length, rng);
+}
+
 /** Tire `count` éléments distincts de `items` (Fisher-Yates partiel). */
 export function sample(items, count, rng) {
   const pool = items.slice();

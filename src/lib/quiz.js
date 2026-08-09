@@ -15,12 +15,18 @@ export const QUIZ = createQuiz({
   textFields: ['name', 'prefecture'],
   accepted,
   choiceFields: { map: (dep, given) => given === dep.code },
+  // Mode carré : une seule question, « lequel de ces quatre départements ? »,
+  // posée trois fois. Le nom, la préfecture et la zone surlignée parlent des
+  // mêmes quatre départements — répondre, c'est alors relier un numéro à un nom,
+  // ce nom à sa préfecture et à sa place sur la carte.
+  //
+  // Ces quatre-là sont pris parmi les voisins de numéro : le numéro suivant
+  // l'ordre alphabétique des noms, ce sont les confusions qui valent la peine.
+  // Le 45 se choisit entre Loiret, Loire-Atlantique et Haute-Loire, pas entre
+  // Loiret et Vaucluse.
+  choiceItems: (dep, { items, index }) => neighbours(items, index, 3),
   choices: {
-    // Le numéro suit l'ordre alphabétique des noms : les voisins de numéro sont
-    // les leurres qui apprennent quelque chose. Le 45 se choisit entre Loiret,
-    // Loire-Atlantique et Haute-Loire, pas entre Loiret et Vaucluse.
-    name: { pool: (dep, { items, index }) => neighbours(items, index, 3).map((d) => d.name) },
-    // Les préfectures, elles, n'ont pas d'ordre : quatre villes au hasard.
+    name: {},
     prefecture: {},
     map: { correct: (dep) => dep.code },
   },
