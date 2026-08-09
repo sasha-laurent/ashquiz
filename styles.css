@@ -100,28 +100,6 @@ main {
   color: var(--accent);
 }
 
-.toggle {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font: inherit;
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.toggle:hover {
-  border-color: var(--accent);
-}
-
-.toggle.is-on {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  color: var(--text);
-}
-
 .muted {
   color: var(--muted);
 }

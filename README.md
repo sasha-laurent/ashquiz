@@ -10,10 +10,10 @@ Trois thèmes pour l'instant :
 - **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
-consécutifs. Chacun se joue au clavier ou, d'un bouton, en **mode carré** : quatre propositions par
-sous-réponse. Le menu affiche, pour chacun, si la série du jour est faite et la série de jours en
-cours ; une fois le quiz du jour terminé, c'est l'entraînement libre qui devient l'action mise en
-avant.
+consécutifs. On y répond au clavier, avec la possibilité de passer une question donnée en **mode
+carré** : quatre propositions par sous-réponse. Le menu affiche, pour chacun, si la série du jour
+est faite et la série de jours en cours ; une fois le quiz du jour terminé, c'est l'entraînement
+libre qui devient l'action mise en avant.
 
 ## Départements et préfectures
 
@@ -95,18 +95,23 @@ jour — ou son résultat s'il est déjà joué.
 
 ## Mode carré
 
-Le bouton **Mode carré**, dans la barre du haut de chaque page de quiz, remplace la saisie au
-clavier par **quatre propositions par sous-réponse**, une seule juste. C'est le mode à choisir pour
-enchaîner les séries quand un thème est encore neuf : on reconnaît avant de savoir restituer.
+Toute question commence au clavier. Le bouton **Passer au carré**, à côté de « Valider », remplace
+alors la saisie par **quatre propositions par sous-réponse**, une seule juste — c'est le coup de
+pouce quand un nom ne revient pas : on reconnaît avant de savoir restituer.
 
-Le réglage vaut pour l'appareil et pour tous les thèmes ; il s'applique au quiz du jour comme à
-l'entraînement libre, et il est retenu d'une visite à l'autre. Le basculer en pleine série remet la
-série en jeu : les questions ne changent pas (la graine non plus), seule la façon d'y répondre.
-Comme 12 / 15 en cochant et 12 / 15 au clavier ne se valent pas, l'écran de résultat rappelle les
-journées jouées au carré — le barème, lui, ne bouge pas.
+Il ne vaut que pour la **question en cours** : la suivante repart au clavier. Rien n'est retenu,
+ni d'une question à l'autre, ni d'une visite à l'autre — il n'y a pas de réglage à trouver, juste un
+bouton à portée de main quand on sèche. Le passage se fait dans un sens seulement : une fois les
+propositions affichées, le bouton disparaît jusqu'à la question suivante. Ce qui était déjà répondu
+et qui n'est pas du lot proposé (une zone cliquée sur la carte, un siècle coché) est effacé, faute
+de case où se montrer.
+
+**Aucun effet sur la note** pour l'instant : le barème ne bouge pas, et le résultat enregistré ne
+garde pas trace des questions jouées au carré.
 
 Les leurres sont tirés de façon déterministe, comme la série : mêmes jour et question, mêmes
-propositions dans le même ordre. Recharger la page ne redistribue rien.
+propositions dans le même ordre. Demander le carré deux fois sur la même question du jour donne les
+mêmes quatre cases.
 
 Ce qui est proposé dépend du thème, et c'est là tout l'intérêt.
 
@@ -131,6 +136,11 @@ les sous-réponses tirent d'un même quatuor d'items. Le noyau (`src/lib/choices
 (« St Etienne » à côté de « Saint-Étienne » ferait deux cases justes), respecter le filtre de tirage
 du thème (une zone absente du fond de carte n'est jamais proposée) et mélanger. Une sous-réponse
 cochée est corrigée exactement comme une réponse tapée, et ne rien cocher vaut ne rien répondre.
+
+Côté écran, `src/ui/quiz-app.js` remplace tout seul les champs texte par leurs propositions ; ce qui
+se répond ailleurs que dans le formulaire revient au thème, par le `showChoices` de son
+`startQuizApp` : la carte se réduit à quatre zones cliquables, les boutons de siècle à quatre
+valeurs.
 
 ## Tableaux
 
@@ -239,8 +249,8 @@ propre ; les deux briques communes s'occupent du reste :
   l'écran de résultat ;
 - **`src/ui/quiz-app.js`** — l'écran. `startQuizApp({ theme, fields, inputs… })` tient la barre de
   progression, l'enchaînement des questions, la correction affichée, le résultat, les statistiques,
-  l'entraînement libre, le mode carré et la persistance. Le thème ne fournit que sa question (`ask`)
-  et sa correction visuelle (`reveal`).
+  l'entraînement libre, le mode carré et la persistance. Le thème ne fournit que sa question
+  (`ask`), ses propositions sur l'énoncé (`showChoices`) et sa correction visuelle (`reveal`).
 
 Restent, par thème : `src/lib/quiz-<thème>.js` (le corpus et ses sous-réponses),
 `src/app-<thème>.js` (une centaine de lignes de DOM propre au thème) et sa page HTML. Les briques
@@ -255,7 +265,7 @@ Concrètement, pour un quatrième thème :
    répond au clic (la carte, le siècle), et un `choices` pour le mode carré ;
 3. **`<thème>.html`** — le squelette d'une page existante, en gardant les identifiants attendus
    (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) ; `btn-carre` est
-   facultatif, une page qui ne le porte pas se joue simplement au clavier ;
+   facultatif, une page qui ne le porte pas se joue seulement au clavier ;
 4. **`src/app-<thème>.js`** — l'appel à `startQuizApp` ;
 5. **une entrée dans `THEMES`** (`src/lib/themes.js`).
 

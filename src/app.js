@@ -49,14 +49,27 @@ startQuizApp({
   ask(dep, ctx) {
     ctx.el('q-code').textContent = dep.code;
     map.reset();
-    // Au carré, seules sont cliquables les zones des quatre départements
-    // proposés plus haut — dans un autre ordre, mais ce sont les mêmes.
-    const zones = ctx.choices?.map;
-    if (zones) map.restrict(zones.values);
-    ctx.el('map-hint').textContent = zones
-      ? "Clique le bon parmi les quatre départements en surbrillance (les mêmes qu'au-dessus)."
-      : 'Clique le département sur la carte.';
+    ctx.el('map-hint').textContent = 'Clique le département sur la carte.';
     ctx.el('map-hint').classList.remove('hint-set');
+  },
+
+  // Passage au carré : seules restent cliquables les zones des quatre
+  // départements proposés au-dessus — dans un autre ordre, mais ce sont les
+  // mêmes.
+  showChoices(dep, ctx) {
+    const zones = ctx.choices.map.values;
+    map.restrict(zones);
+    // Un département déjà cliqué qui n'est pas du lot n'a plus lieu d'être
+    // sélectionné.
+    if (ctx.selection && !zones.includes(ctx.selection)) {
+      map.clearSelection();
+      ctx.select(null);
+    }
+    if (!ctx.selection) {
+      ctx.el('map-hint').textContent =
+        "Clique le bon parmi les quatre départements en surbrillance (les mêmes qu'au-dessus).";
+      ctx.el('map-hint').classList.remove('hint-set');
+    }
   },
 
   reveal(dep, answer, ctx) {

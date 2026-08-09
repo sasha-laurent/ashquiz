@@ -8,7 +8,8 @@ import { createPaintingQuiz } from './lib/quiz-paintings.js';
 import { THEMES_BY_ID } from './lib/themes.js';
 import { startQuizApp } from './ui/quiz-app.js';
 
-// Les siècles représentés dans le corpus : les boutons hors mode carré.
+// Les siècles représentés dans le corpus : les boutons de départ, avant tout
+// passage au carré.
 let allCenturies = [];
 
 /** Les boutons de siècle : tout le corpus, ou les quatre du mode carré. */
@@ -71,9 +72,16 @@ startQuizApp({
     image.alt = 'Tableau à identifier';
     ctx.el('artwork-caption').textContent = '';
 
-    // Au carré, le siècle se choisit entre quatre boutons seulement : ils sont
-    // retirés et remis à chaque question.
-    renderCenturyChoices(ctx.choices?.century?.values ?? allCenturies, ctx);
+    renderCenturyChoices(allCenturies, ctx);
+  },
+
+  // Passage au carré : le siècle ne se choisit plus qu'entre quatre boutons. Un
+  // siècle déjà coché qui n'est pas du lot n'a plus de bouton où se voir.
+  showChoices(painting, ctx) {
+    const centuries = ctx.choices.century.values;
+    renderCenturyChoices(centuries, ctx);
+    if (centuries.includes(ctx.selection)) selectCentury(ctx.selection, ctx);
+    else ctx.select(null);
   },
 
   reveal(painting, answer, ctx) {
