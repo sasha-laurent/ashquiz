@@ -10,7 +10,7 @@
 // `src/app.js`, `src/app-paintings.js`, `src/app-countries.js`.
 
 import { dateKey, humanDate } from '../lib/date.js';
-import { DAILY, PRACTICE, carreEnabled, requestedMode, setCarreEnabled } from '../lib/mode.js';
+import { DAILY, PRACTICE, requestedMode } from '../lib/mode.js';
 import { streak } from '../lib/storage.js';
 import { createThemeStore } from '../lib/themes.js';
 
@@ -35,10 +35,11 @@ const SCREENS = ['loading', 'error', 'quiz', 'summary'];
  *   `ctx.selection`
  * @param {(code: string, item: object) => boolean} [spec.filter]  restreint le tirage
  * @param {string} spec.resetPrompt  la confirmation avant effacement
- * @param {(item: object, ctx: object) => void} [spec.ask]  affiche l'énoncé. En
- *   mode carré, `ctx.choices` porte les propositions de chaque sous-réponse :
- *   celles des champs texte sont affichées ici, les autres (la carte, le siècle)
- *   sont au thème
+ * @param {(item: object, ctx: object) => void} [spec.ask]  affiche l'énoncé
+ * @param {(item: object, ctx: object) => void} [spec.showChoices]  la question
+ *   passe au mode carré : le thème rétrécit ce qui ne se coche pas dans le
+ *   formulaire (la carte aux quatre zones proposées, les siècles aux quatre
+ *   valeurs) d'après `ctx.choices`. Les champs texte, eux, sont pris en charge ici
  * @param {(item: object, answer: object, ctx: object) => void} [spec.reveal]  dévoile
  *   la réponse sur l'énoncé
  * @param {(item: object) => Record<string, string>} spec.expected  réponse attendue,
@@ -60,6 +61,7 @@ export function startQuizApp(spec) {
     resetPrompt,
     setup = null,
     ask = () => {},
+    showChoices = () => {},
     reveal = () => {},
     expected = () => ({}),
     wrongDetail = () => ({}),
@@ -85,9 +87,8 @@ export function startQuizApp(spec) {
     answers: [],
     selection: null,
     revealed: false,
-    // Mode carré : les propositions de la question en cours, et celles que le
-    // joueur a cochées parmi les champs texte.
-    carre: false,
+    // Mode carré : les propositions de la question en cours — nulles tant que le
+    // joueur ne les a pas demandées — et celles qu'il a cochées.
     choices: null,
     picked: {},
   };
@@ -109,10 +110,7 @@ export function startQuizApp(spec) {
     get revealed() {
       return run.revealed;
     },
-    get carre() {
-      return run.carre;
-    },
-    /** Les propositions de la question en cours, ou null hors mode carré. */
+    /** Les propositions de la question en cours, ou null tant qu'on répond au clavier. */
     get choices() {
       return run.choices;
     },
@@ -142,10 +140,8 @@ export function startQuizApp(spec) {
       }
     }
 
-    run.carre = quiz.hasChoices && carreEnabled();
     buildChoiceFields();
     wireEvents();
-    syncCarreButton();
     await refreshStreak();
 
     const existing = startMode === DAILY ? await store.getDay(today) : null;
@@ -240,25 +236,33 @@ export function startQuizApp(spec) {
     }
   }
 
-  function toggleCarre() {
-    run.carre = !run.carre;
-    setCarreEnabled(run.carre);
+  /**
+   * Le coup de pouce : la question en cours passe au carré. Elle seule — la
+   * suivante repartira au clavier — et sans effet sur la note.
+   */
+  function askChoices() {
+    const item = run.session[run.index];
+    if (run.revealed || run.choices) return;
+
+    run.choices = quiz.buildChoices(item, run.seed, filter);
+    run.picked = {};
+    for (const id of inputIds) el(id).value = '';
+    for (const key of choiceFields.keys()) renderChoiceField(key);
+    // Le thème rétrécit ce qui ne se coche pas ici : la carte, les siècles.
+    showChoices(item, ctx);
     syncCarreButton();
-    // Changer de mode en pleine série remet la série en jeu : les questions
-    // sont les mêmes (la graine n'a pas bougé), la façon d'y répondre non.
-    if (screen === 'quiz') startRun(run.mode);
+    focusFirstChoice();
   }
 
+  /** Le bouton n'a de sens qu'une fois par question, avant la correction. */
   function syncCarreButton() {
     const button = el('btn-carre');
     if (!button) return;
-    button.hidden = !quiz.hasChoices;
-    button.classList.toggle('is-on', run.carre);
-    button.setAttribute('aria-pressed', String(run.carre));
+    button.hidden = !quiz.hasChoices || run.revealed || Boolean(run.choices);
   }
 
   function wireEvents() {
-    el('btn-carre')?.addEventListener('click', toggleCarre);
+    el('btn-carre')?.addEventListener('click', askChoices);
 
     el('answer-form').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -305,7 +309,9 @@ export function startQuizApp(spec) {
     run.selection = null;
     run.revealed = false;
     run.picked = {};
-    run.choices = run.carre ? quiz.buildChoices(item, run.seed, filter) : null;
+    // Toute question commence au clavier : le carré se demande, question par
+    // question.
+    run.choices = null;
 
     for (const id of inputIds) {
       el(id).value = '';
@@ -316,23 +322,20 @@ export function startQuizApp(spec) {
     el('feedback').replaceChildren();
     el('btn-validate').hidden = false;
     el('btn-next').hidden = true;
+    syncCarreButton();
 
     ask(item, ctx);
 
     renderProgress();
-    focusFirstAnswer();
+    if (inputIds.length) el(inputIds[0]).focus();
   }
 
-  /** La première chose à faire : saisir, ou cocher. */
-  function focusFirstAnswer() {
-    if (run.carre) {
-      for (const { key } of fields) {
-        const first = choiceFields.get(key)?.grid.firstElementChild;
-        if (first) return first.focus();
-      }
-      return;
+  /** Après le passage au carré, il n'y a plus rien à saisir : on va cocher. */
+  function focusFirstChoice() {
+    for (const { key } of fields) {
+      const first = choiceFields.get(key)?.grid.firstElementChild;
+      if (first) return first.focus();
     }
-    if (inputIds.length) el(inputIds[0]).focus();
   }
 
   function renderProgress() {
@@ -374,6 +377,7 @@ export function startQuizApp(spec) {
 
     for (const id of inputIds) el(id).disabled = true;
     for (const key of choiceFields.keys()) revealChoiceField(key);
+    syncCarreButton();
     reveal(item, answer, ctx);
 
     const answers = expected(item, ctx);
@@ -405,7 +409,6 @@ export function startQuizApp(spec) {
     const day = {
       date: run.mode === DAILY ? today : null,
       mode: run.mode,
-      carre: run.carre,
       answers: run.answers,
       score: quiz.totalScore(run.answers),
       max: quiz.maxScore(run.answers.length),
@@ -426,10 +429,7 @@ export function startQuizApp(spec) {
       : alreadyDone
         ? `Quiz du jour déjà fait — ${humanDate(today)}`
         : 'Quiz du jour terminé';
-    // Le mode carré est rappelé ici : 12 / 15 au clavier et 12 / 15 parmi quatre
-    // propositions ne se valent pas.
-    el('summary-score').textContent =
-      `${day.score} / ${day.max} points` + (day.carre ? ' · mode carré' : '');
+    el('summary-score').textContent = `${day.score} / ${day.max} points`;
 
     const list = el('summary-list');
     list.replaceChildren();

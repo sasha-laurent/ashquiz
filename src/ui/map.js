@@ -85,6 +85,10 @@ export function createMap(container, model) {
     }
   }
 
+  function clearSelection() {
+    setClass('is-selected', null);
+  }
+
   function clearClasses() {
     for (const list of paths.values()) {
       for (const path of list) path.classList.remove('is-selected', 'is-correct', 'is-wrong');
@@ -124,6 +128,7 @@ export function createMap(container, model) {
       restrict(null);
     },
     restrict,
+    clearSelection,
     /** Correction : on verrouille, on montre la bonne réponse et l'erreur. */
     reveal({ correct, given }) {
       locked = true;
