@@ -15,7 +15,15 @@ export const QUIZ = createQuiz({
   items: COUNTRIES,
   textFields: ['name', 'capital'],
   accepted,
-  // Rien de particulier à imiter ici : trois pays et trois capitales au hasard.
+  // Mode carré : les deux sous-réponses parlent des mêmes quatre pays — les
+  // capitales proposées sont celles des pays proposés. Si la France est du lot,
+  // Paris l'est aussi, que le drapeau soit le sien ou non. La question devient
+  // « lequel de ces quatre ? », posée deux fois : relier un drapeau à un pays,
+  // puis ce pays à sa capitale.
+  //
+  // Rien ne rapproche deux pays comme le numéro rapproche deux départements :
+  // les trois autres sont pris au hasard dans le corpus.
+  choiceItems: (country, { items }) => items,
   choices: { name: {}, capital: {} },
 });
 

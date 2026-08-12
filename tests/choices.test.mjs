@@ -10,6 +10,8 @@ import { QUIZ as PAYS } from '../src/lib/quiz-countries.js';
 import { createPaintingQuiz } from '../src/lib/quiz-paintings.js';
 import { makeRng } from '../src/lib/rng.js';
 
+const BY_NAME = new Map(COUNTRIES.map((country) => [country.name, country]));
+
 test('un tirage de propositions contient la bonne réponse, sans doublon', () => {
   const values = pickChoices({
     correct: 'Isère',
@@ -151,6 +153,32 @@ test('les pays proposent des noms et des capitales quelconques', () => {
   assert.equal(choices.capital.correct, 'Paris');
   for (const value of choices.name.values) assert.ok(names.has(value), value);
   for (const value of choices.capital.values) assert.ok(capitals.has(value), value);
+});
+
+test('les capitales proposées sont celles des pays proposés', () => {
+  // Si la France est du lot, Paris l'est aussi — que le drapeau soit le sien ou
+  // celui d'un leurre.
+  for (const country of COUNTRIES) {
+    const { name, capital } = PAYS.buildChoices(country, '2026-08-08');
+    const proposed = name.values.map((value) => BY_NAME.get(value));
+
+    assert.equal(name.values.length, CHOICES_PER_QUESTION, country.code);
+    assert.deepEqual(
+      new Set(capital.values),
+      new Set(proposed.map((other) => other.capital)),
+      country.code,
+    );
+    assert.equal(capital.correct, country.capital, country.code);
+  }
+});
+
+test("les pays aussi retirent l'ordre d'affichage par sous-réponse", () => {
+  // Reconnaître le drapeau ne doit pas livrer la position de la capitale.
+  const alignés = COUNTRIES.filter((country) => {
+    const { name, capital } = PAYS.buildChoices(country, '2026-08-08');
+    return name.values.every((value, i) => BY_NAME.get(value).capital === capital.values[i]);
+  });
+  assert.ok(alignés.length < 10, `${alignés.length} pays alignent leurs sous-réponses`);
 });
 
 test('les tableaux proposent titres, peintres et siècles du corpus', () => {
