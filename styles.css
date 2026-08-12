@@ -306,6 +306,10 @@ main {
   color: var(--accent);
 }
 
+/* La correction et les boutons ferment le formulaire, sous les deux colonnes :
+   on ne valide qu'après avoir vu tout ce qu'il y a à répondre, carte comprise.
+   Les placer dans la colonne des champs les mettait avant la carte, et on
+   cliquait « Valider » par réflexe sans avoir pointé la zone. */
 .actions {
   display: flex;
   gap: 10px;
