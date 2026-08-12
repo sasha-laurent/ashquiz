@@ -35,6 +35,16 @@ export const THEMES = [
     prompt: 'À partir du drapeau : le nom du pays et sa capitale.',
     storage: { key: 'ashquiz.pays.v1', statsKey: 'countries' },
   },
+  {
+    id: 'etats-unis',
+    name: 'États américains',
+    icon: '🦅',
+    href: 'etats-unis.html',
+    short: 'États-Unis',
+    prompt:
+      "À partir du code à deux lettres : le nom de l'État, sa capitale et sa position sur la carte.",
+    storage: { key: 'ashquiz.etats-unis.v1', statsKey: 'states' },
+  },
 ];
 
 export const THEMES_BY_ID = new Map(THEMES.map((theme) => [theme.id, theme]));

@@ -3,29 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ashquiz — tableaux</title>
+    <title>Ashquiz — États américains et capitales</title>
     <meta
       name="description"
-      content="Cinq tableaux par jour : retrouver le titre de l'œuvre, son peintre et son siècle."
+      content="Cinq questions par jour pour réviser les 50 États américains : à partir du code à deux lettres, le nom, la capitale et la position sur la carte."
     />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦅</text></svg>"
     />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
         <span class="brand-name">Ashquiz</span>
-        <span class="brand-theme">Tableaux</span>
+        <span class="brand-theme">États américains</span>
       </div>
       <nav class="themes" aria-label="Thèmes">
         <a href="index.html">Accueil</a>
         <a href="departements.html">Départements</a>
-        <a href="tableaux.html" aria-current="page">Tableaux</a>
+        <a href="tableaux.html">Tableaux</a>
         <a href="pays.html">Pays</a>
-        <a href="etats-unis.html">États-Unis</a>
+        <a href="etats-unis.html" aria-current="page">États-Unis</a>
       </nav>
       <div class="topbar-meta">
         <span id="today-label" class="today"></span>
@@ -35,15 +35,14 @@
 
     <main>
       <section id="screen-loading" class="screen">
-        <p class="muted">Chargement des œuvres…</p>
+        <p class="muted">Chargement de la carte…</p>
       </section>
 
       <section id="screen-error" class="screen" hidden>
-        <h1>Les œuvres n'ont pas pu être chargées</h1>
+        <h1>La carte n'a pas pu être chargée</h1>
         <p class="muted">
-          La liste des tableaux est un fichier produit par
-          <code>npm run build:paintings</code>, qui interroge Wikidata. Lance cette commande puis
-          recharge la page.
+          Le fond de carte provient des contours Natural Earth des États américains. Vérifie ta
+          connexion, ou vendorise le fichier en local avec <code>npm run build:states</code>.
         </p>
         <pre id="error-detail" class="error-detail"></pre>
       </section>
@@ -55,27 +54,22 @@
         </div>
 
         <form id="answer-form" class="card" autocomplete="off">
-          <p class="prompt">Quel est ce tableau ?</p>
+          <p class="prompt">État <strong id="q-code" class="q-code">—</strong></p>
 
           <div class="columns">
             <div class="fields">
               <label class="field">
-                <span class="field-label">Titre de l'œuvre</span>
-                <input id="in-title" type="text" spellcheck="false" enterkeyhint="next" />
+                <span class="field-label">Nom de l'État</span>
+                <input id="in-name" type="text" spellcheck="false" enterkeyhint="next" />
               </label>
 
               <label class="field">
-                <span class="field-label">Peintre</span>
-                <input id="in-painter" type="text" spellcheck="false" enterkeyhint="done" />
+                <span class="field-label">Capitale</span>
+                <input id="in-capital" type="text" spellcheck="false" enterkeyhint="done" />
               </label>
 
-              <p class="field-label map-instruction" id="centuries-label">Siècle</p>
-              <div
-                id="centuries"
-                class="centuries"
-                role="radiogroup"
-                aria-labelledby="centuries-label"
-              ></div>
+              <p class="field-label map-instruction">Position sur la carte</p>
+              <p id="map-hint" class="hint">Clique l'État sur la carte →</p>
 
               <div id="feedback" class="feedback" hidden></div>
 
@@ -93,14 +87,7 @@
               </div>
             </div>
 
-            <figure id="artwork" class="artwork">
-              <img id="artwork-image" alt="Tableau à identifier" />
-              <p class="artwork-fallback">
-                L'image n'a pas pu être chargée depuis Wikimedia Commons.<br />
-                Le peintre et le siècle restent devinables… ou passe à la question suivante.
-              </p>
-              <figcaption id="artwork-caption" class="artwork-caption muted"></figcaption>
-            </figure>
+            <div id="map" class="map-wrap"></div>
           </div>
         </form>
       </section>
@@ -125,11 +112,9 @@
     </main>
 
     <footer class="footer">
-      <span id="data-credit"
-        >Œuvres et métadonnées : Wikidata (CC0) — images : Wikimedia Commons.</span
-      >
+      <span>Fond de carte : contours des États américains (Natural Earth, domaine public).</span>
     </footer>
 
-    <script type="module" src="src/app-paintings.js"></script>
+    <script type="module" src="src/app-states.js"></script>
   </body>
 </html>

@@ -3,11 +3,13 @@
 Petits quiz de révision quotidiens. La page d'accueil (`index.html`) est un menu : un bloc par
 thème, avec son quiz du jour et son entraînement libre.
 
-Trois thèmes pour l'instant :
+Quatre thèmes pour l'instant :
 
 - **Départements et préfectures français** (`departements.html`) ;
 - **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle ;
-- **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale.
+- **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale ;
+- **États américains** (`etats-unis.html`) : à partir du code à deux lettres, le nom de l'État, sa
+  capitale et sa position sur la carte.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
 consécutifs. On y répond au clavier, avec la possibilité de passer une question donnée en **mode
@@ -33,6 +35,7 @@ affichent le même quiz le même jour.
 npm run build:map        # une fois : télécharge le fond de carte dans data/
 npm run build:paintings  # une fois : télécharge la liste des œuvres dans data/
 npm run build:flags      # une fois : télécharge les drapeaux dans data/drapeaux/
+npm run build:states     # une fois : télécharge le fond de carte des États-Unis dans data/
 npm run dev              # http://localhost:8080
 npm test                 # tests unitaires (aucune dépendance)
 ```
@@ -41,7 +44,16 @@ Il n'y a **aucune étape de build** et aucune dépendance npm : ce sont des fich
 modules ES chargés tels quels. Le serveur `npm run dev` sert juste à éviter les restrictions
 `file://` sur les modules.
 
-## Fond de carte
+## Fonds de carte
+
+Deux thèmes ont une carte cliquable, et elles partagent tout sauf leur découpage : `src/lib/geo-model.js`
+charge le GeoJSON et projette des **groupes de zones** en tracés SVG, `src/ui/map.js` les rend
+cliquables (survol, sélection, surlignage à la correction, restriction aux quatre zones du mode
+carré). Un thème n'écrit que sa géographie : où trouver le fichier, où lire le code d'une zone, et
+comment découper le cadre entre le bloc principal et les encarts. Côté outils, `tools/geojson.mjs`
+fait de même pour le téléchargement, la simplification et l'arrondi des coordonnées.
+
+### Départements
 
 La carte est construite à l'exécution à partir du GeoJSON officiel des départements
 (dépôt [france-geojson](https://github.com/gregoiredavid/france-geojson), données Etalab/IGN en
@@ -65,6 +77,27 @@ La métropole est dessinée d'un bloc ; la petite couronne parisienne (75, 92, 9
 départements d'outre-mer sont repris dans des encarts, sans quoi ils seraient illisibles ou hors
 cadre. Les encarts occupent les deux colonnes latérales : Antilles et Guyane à l'ouest, petite
 couronne et océan Indien à l'est. Un département présent deux fois est cliquable aux deux endroits.
+
+### États américains
+
+Même mécanique, un autre découpage (`src/lib/geo-states.js`). La source est
+[Natural Earth](https://www.naturalearthdata.com) 1:50m (domaine public), qui porte le code postal
+à deux lettres de chaque État dans `iso_3166_2`. `npm run build:states` n'en garde que les 50 États
+— ni district de Columbia, ni territoires — et écrit `data/etats-unis.geojson` (180 ko). Deux
+allègements au passage : l'Alaska, dont la chaîne des Aléoutiennes pèse à elle seule plus que le
+reste du pays, et Hawaï, ramené à ses îles principales — sans quoi l'encart serait surtout de
+l'océan jusqu'à Midway. Les 48 États contigus, eux, gardent leur précision d'origine : simplifier
+chacun de son côté ouvrirait des interstices le long des frontières communes.
+
+Les 48 contigus sont dessinés d'un bloc, en haut du cadre ; la bande du bas et la colonne de droite
+accueillent quatre encarts : l'Alaska et Hawaï, hors cadre autrement, puis deux zooms sur le
+nord-est — la Nouvelle-Angleterre, où le Rhode Island fait huit pixels de large, et le trio
+Delaware, Maryland, New Jersey. Comme Paris sur la carte des départements, ces États-là figurent
+deux fois, et sont cliquables aux deux endroits.
+
+Faute de `data/etats-unis.geojson`, le site retombe sur le fichier Natural Earth d'origine, qui
+couvre le monde entier : les entités qui ne sont pas américaines (provinces canadiennes, États
+brésiliens — dont certains ont le même code que des États américains) sont écartées à la lecture.
 
 ## Correction des réponses
 
@@ -130,6 +163,14 @@ soit le sien ou celui d'un leurre. Relier un drapeau à un pays, puis ce pays à
 capitale reconnue peut alors rattraper un nom qui ne revient pas. Rien ne rapproche deux pays comme
 le numéro rapproche deux départements — les trois autres sont pris au hasard dans le corpus. Là
 encore, seul **l'ordre d'affichage** est retiré pour chaque sous-réponse.
+
+**États américains** — les trois sous-réponses portent sur **les mêmes quatre États**, comme pour
+les départements. Les leurres, eux, se prennent d'abord parmi les États dont le **code commence par
+la même lettre** : c'est là que sont les confusions qui valent la peine — MI, MN, MO, MS et MT se
+ressemblent bien plus que MI et FL. Dix-huit États sont seuls ou presque sous leur initiale (le
+Delaware, la Floride, le Kansas…), et un carré à deux cases n'apprendrait rien : leur **région**
+(déclarée dans `src/data/states.js`, et qui ne sert qu'à ça) complète alors le lot par des voisins,
+faute de voisins de code.
 
 **Tableaux** (titre, peintre, siècle) — quatre propositions quelconques prises dans le corpus,
 tirées indépendamment pour chaque sous-réponse : un nom de peintre appartient à toutes ses œuvres,
@@ -244,9 +285,29 @@ pas ceux des atlas d'il y a quelques années. Changer un drapeau se fait en corr
 Le fichier déjà présent n'est pas retéléchargé : Commons répond `429` au bout de quelques dizaines
 de requêtes, et relancer la commande reprend simplement les manquants.
 
+## États américains
+
+Cinq États par jour. Pour chacun, on part du **code postal à deux lettres** (`CA`, `MO`, `RI`…) et
+il faut donner :
+
+1. le **nom** de l'État,
+2. sa **capitale**,
+3. sa **position**, en cliquant la bonne zone sur la carte des États-Unis.
+
+Un point par sous-réponse, soit 15 points par jour : c'est le jumeau du quiz des départements, le
+code à deux lettres tenant lieu de numéro.
+
+Le corpus est celui des **50 États** (`src/data/states.js`). Le district de Columbia n'y figure pas :
+ce n'est pas un État. Les noms sont donnés en français quand l'usage l'a francisé (Californie,
+Caroline du Nord, Nouveau-Mexique), et le nom anglais est accepté à la correction — comme le sont
+les tolérances habituelles de `src/lib/text.js`. La capitale attendue est celle de l'État, pas sa
+plus grande ville : Albany et non New York, Sacramento et non Los Angeles, Olympia et non Seattle —
+c'est d'ailleurs là que le thème se joue. Le garde-fou habituel s'applique : « Dover », capitale du
+Delaware, n'est jamais acceptée pour Denver, dont elle n'est qu'à une lettre.
+
 ## Ajouter un thème plus tard
 
-Les trois thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
+Les quatre thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
 caractéristiques » — et ce déroulé n'est écrit qu'une fois. Un thème ne décrit que ce qui lui est
 propre ; les deux briques communes s'occupent du reste :
 
@@ -264,7 +325,7 @@ Restent, par thème : `src/lib/quiz-<thème>.js` (le corpus et ses sous-réponse
 `src/app-<thème>.js` (une centaine de lignes de DOM propre au thème) et sa page HTML. Les briques
 `src/lib/text.js`, `rng.js`, `storage.js` et `date.js` se réutilisent telles quelles.
 
-Concrètement, pour un quatrième thème :
+Concrètement, pour un thème de plus :
 
 1. **les données** — un module de `src/data/` ou un fichier de `data/` produit par un outil de
    `tools/` ;
@@ -282,7 +343,8 @@ distingue les thèmes entre eux — sans lui, deux thèmes de même taille poser
 le même jour — mais **le changer une fois le thème en ligne rebattrait les cartes de tout le
 monde**.
 
-Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays) :
+Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays,
+États américains) :
 un module JS importé normalement, modifiable à la main, et les outils de `tools/` ne servent qu'aux
 images. Corpus ouvert et régénérable (tableaux) : un fichier de `data/` produit par un outil et
 chargé en JSON à l'exécution, ce qui impose un écran de chargement et un écran d'erreur — le thème

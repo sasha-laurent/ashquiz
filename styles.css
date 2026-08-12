@@ -403,7 +403,7 @@ a.btn {
   touch-action: manipulation;
 }
 
-.dept {
+.map-zone {
   fill: var(--land);
   stroke: var(--bg);
   stroke-width: 0.8;
@@ -412,46 +412,46 @@ a.btn {
   transition: fill 0.12s ease;
 }
 
-.map:not(.is-locked) .dept:hover {
+.map:not(.is-locked) .map-zone:hover {
   fill: var(--land-hover);
 }
 
-.map.is-locked .dept {
+.map.is-locked .map-zone {
   cursor: default;
 }
 
 /* Mode carré : seules les zones proposées répondent au clic. */
-.dept.is-option {
+.map-zone.is-option {
   fill: color-mix(in srgb, var(--accent) 45%, var(--land));
   stroke: var(--accent);
   stroke-width: 1.4;
   paint-order: stroke;
 }
 
-.map:not(.is-locked) .dept.is-option:hover {
+.map:not(.is-locked) .map-zone.is-option:hover {
   fill: var(--accent);
 }
 
-.map.is-restricted .dept:not(.is-option) {
+.map.is-restricted .map-zone:not(.is-option) {
   cursor: default;
 }
 
-.map.is-restricted:not(.is-locked) .dept:not(.is-option):hover {
+.map.is-restricted:not(.is-locked) .map-zone:not(.is-option):hover {
   fill: var(--land);
 }
 
-.dept.is-selected {
+.map-zone.is-selected {
   fill: var(--accent);
 }
 
-.dept.is-correct {
+.map-zone.is-correct {
   fill: var(--ok);
   stroke: var(--ok);
   stroke-width: 1.6;
   paint-order: stroke;
 }
 
-.dept.is-wrong {
+.map-zone.is-wrong {
   fill: var(--ko);
 }
 
