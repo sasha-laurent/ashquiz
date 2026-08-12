@@ -124,14 +124,22 @@ confusions qui valent la peine — le 45 se choisit entre Loiret, Loire-Atlantiq
 entre Loiret et Vaucluse. Seul **l'ordre d'affichage** est retiré pour chaque sous-réponse : sans
 quoi reconnaître le nom livrerait la position de la préfecture et de la zone à cliquer.
 
-**Tableaux** (titre, peintre, siècle) et **drapeaux** (pays, capitale) — quatre propositions
-quelconques prises dans le corpus, tirées indépendamment pour chaque sous-réponse : rien n'y
-rapproche deux œuvres ou deux pays comme le numéro rapproche deux départements. Les siècles restent
-rangés dans l'ordre chronologique : la position d'un bouton ne doit rien dire de la réponse.
+**Drapeaux** — les deux sous-réponses portent sur **les mêmes quatre pays** : les capitales
+proposées sont celles des pays proposés. Si la France est du lot, Paris l'est aussi, que le drapeau
+soit le sien ou celui d'un leurre. Relier un drapeau à un pays, puis ce pays à sa capitale : une
+capitale reconnue peut alors rattraper un nom qui ne revient pas. Rien ne rapproche deux pays comme
+le numéro rapproche deux départements — les trois autres sont pris au hasard dans le corpus. Là
+encore, seul **l'ordre d'affichage** est retiré pour chaque sous-réponse.
+
+**Tableaux** (titre, peintre, siècle) — quatre propositions quelconques prises dans le corpus,
+tirées indépendamment pour chaque sous-réponse : un nom de peintre appartient à toutes ses œuvres,
+et deux tableaux proposés ensemble pourraient être du même — ce qui ferait deux cases justes. Les
+siècles restent rangés dans l'ordre chronologique : la position d'un bouton ne doit rien dire de la
+réponse.
 
 Côté code, un thème déclare ces règles dans son `createQuiz` : `choices` dit, par sous-réponse, la
-bonne proposition et le vivier des leurres ; `choiceItems` — celui des départements — dit que toutes
-les sous-réponses tirent d'un même quatuor d'items. Le noyau (`src/lib/choices.js`,
+bonne proposition et le vivier des leurres ; `choiceItems` — celui des départements et des drapeaux
+— dit que toutes les sous-réponses tirent d'un même quatuor d'items. Le noyau (`src/lib/choices.js`,
 `src/lib/quiz-core.js`) se charge du reste : écarter les leurres qui se lisent comme la bonne réponse
 (« St Etienne » à côté de « Saint-Étienne » ferait deux cases justes), respecter le filtre de tirage
 du thème (une zone absente du fond de carte n'est jamais proposée) et mélanger. Une sous-réponse
