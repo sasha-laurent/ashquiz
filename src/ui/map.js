@@ -1,14 +1,23 @@
-// Carte cliquable des départements.
-
-import { BY_CODE } from '../data/departments.js';
+// Carte cliquable, commune aux thèmes qui en ont une : les départements
+// français, les États américains. Elle ne connaît que le modèle projeté par
+// src/lib/geo-model.js — des groupes de zones, chacune identifiée par un code —
+// et le libellé que le thème donne à un code, pour l'infobulle de la correction.
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-export function createMap(container, model) {
+/**
+ * @param {HTMLElement} container
+ * @param {{view: object, groups: object[]}} model  voir src/lib/geo-model.js
+ * @param {object} [options]
+ * @param {string} [options.ariaLabel]
+ * @param {(code: string) => string} [options.label]  « 38 — Isère », révélé à la
+ *   correction seulement : avant, l'infobulle donnerait la réponse
+ */
+export function createMap(container, model, { ariaLabel = 'Carte', label = (code) => code } = {}) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${model.view.width} ${model.view.height}`);
   svg.setAttribute('role', 'group');
-  svg.setAttribute('aria-label', 'Carte des départements français');
+  svg.setAttribute('aria-label', ariaLabel);
   svg.classList.add('map');
 
   const paths = new Map();
@@ -43,9 +52,10 @@ export function createMap(container, model) {
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('d', shape.d);
       path.dataset.code = shape.code;
-      path.classList.add('dept');
+      path.classList.add('map-zone');
       g.appendChild(path);
-      // Un département peut apparaître deux fois (métropole + encart IDF).
+      // Une zone peut apparaître deux fois (Paris dans la métropole et dans
+      // l'encart, le Rhode Island dans les 48 contigus et en Nouvelle-Angleterre).
       const list = paths.get(shape.code) || [];
       list.push(path);
       paths.set(shape.code, list);
@@ -56,7 +66,7 @@ export function createMap(container, model) {
 
   svg.addEventListener('click', (event) => {
     if (locked) return;
-    const target = event.target.closest('path.dept');
+    const target = event.target.closest('path.map-zone');
     if (!target) return;
     const code = target.dataset.code;
     if (allowed && !allowed.has(code)) return;
@@ -103,12 +113,11 @@ export function createMap(container, model) {
           existing?.remove();
           continue;
         }
-        const dep = BY_CODE.get(code);
-        const label = dep ? `${dep.code} — ${dep.name}` : code;
-        if (existing) existing.textContent = label;
+        const text = label(code);
+        if (existing) existing.textContent = text;
         else {
           const title = document.createElementNS(SVG_NS, 'title');
-          title.textContent = label;
+          title.textContent = text;
           path.appendChild(title);
         }
       }

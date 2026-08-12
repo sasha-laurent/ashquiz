@@ -31,7 +31,13 @@ startQuizApp({
 
   async setup(ctx) {
     const { data } = await loadGeojson();
-    map = createMap(ctx.el('map'), buildMapModel(data));
+    map = createMap(ctx.el('map'), buildMapModel(data), {
+      ariaLabel: 'Carte des départements français',
+      label: (code) => {
+        const dep = BY_CODE.get(code);
+        return dep ? `${dep.code} — ${dep.name}` : code;
+      },
+    });
     map.onSelect((code) => {
       ctx.select(code);
       const hint = ctx.el('map-hint');

@@ -11,6 +11,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { countPoints, download, roundCoords, simplifyGeometry } from './geojson.mjs';
+
 const MIRRORS = [
   'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/',
   'https://france-geojson.gregoiredavid.fr/repo/',
@@ -22,140 +24,11 @@ const OVERSEAS_CODES = ['971', '972', '973', '974', '976'];
 
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'departements.geojson');
 
-// ~11 m de précision : largement suffisant pour une carte de 1000 px de large.
-const PRECISION = 4;
-
-function roundCoords(node) {
-  if (typeof node === 'number') return Number(node.toFixed(PRECISION));
-  if (Array.isArray(node)) return node.map(roundCoords);
-  return node;
-}
-
-async function download(file) {
-  const errors = [];
-  for (const mirror of MIRRORS) {
-    const url = mirror + file;
-    try {
-      process.stdout.write(`Téléchargement : ${url}\n`);
-      const response = await fetch(url);
-      if (!response.ok) {
-        errors.push(`${url} → HTTP ${response.status}`);
-        continue;
-      }
-      return await response.json();
-    } catch (error) {
-      errors.push(`${url} → ${error.message}`);
-    }
-  }
-  throw new Error(`Aucune source accessible pour ${file} :\n  ${errors.join('\n  ')}`);
-}
-
-// --- Simplification (Douglas-Peucker) --------------------------------------
-// Le fichier « avec outre-mer » est en pleine précision : sans allègement, les
-// cinq DOM pèseraient plus lourd que toute la métropole simplifiée, pour un
-// rendu final de 170 px de large.
-
-function segmentDistance(point, start, end) {
-  // Distances en degrés, avec correction de longitude : suffisant à cette
-  // échelle et sans dépendance externe.
-  const k = Math.cos((point[1] * Math.PI) / 180);
-  const px = point[0] * k;
-  const ax = start[0] * k;
-  const bx = end[0] * k;
-  const dx = bx - ax;
-  const dy = end[1] - start[1];
-  if (dx === 0 && dy === 0) return Math.hypot(px - ax, point[1] - start[1]);
-  const t = Math.max(
-    0,
-    Math.min(1, ((px - ax) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy)),
-  );
-  return Math.hypot(px - (ax + t * dx), point[1] - (start[1] + t * dy));
-}
-
-function simplifyRing(ring, tolerance) {
-  if (ring.length <= 4) return ring;
-  const keep = new Uint8Array(ring.length);
-  keep[0] = 1;
-  keep[ring.length - 1] = 1;
-  const stack = [[0, ring.length - 1]];
-  while (stack.length) {
-    const [first, last] = stack.pop();
-    let index = -1;
-    let best = tolerance;
-    for (let i = first + 1; i < last; i += 1) {
-      const distance = segmentDistance(ring[i], ring[first], ring[last]);
-      if (distance > best) {
-        best = distance;
-        index = i;
-      }
-    }
-    if (index === -1) continue;
-    keep[index] = 1;
-    stack.push([first, index], [index, last]);
-  }
-  return ring.filter((_, i) => keep[i]);
-}
-
-function boundsOf(rings) {
-  let minLon = Infinity;
-  let maxLon = -Infinity;
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-  for (const ring of rings) {
-    for (const [lon, lat] of ring) {
-      if (lon < minLon) minLon = lon;
-      if (lon > maxLon) maxLon = lon;
-      if (lat < minLat) minLat = lat;
-      if (lat > maxLat) maxLat = lat;
-    }
-  }
-  return { minLon, maxLon, minLat, maxLat };
-}
-
-/**
- * Allège une géométrie avec une tolérance proportionnelle à sa taille : le même
- * budget de détail pour la Guyane (4° de haut) et pour Mayotte (0,3°).
- */
-function simplifyGeometry(geometry) {
-  if (!geometry) return geometry;
-  const rings =
-    geometry.type === 'Polygon' ? geometry.coordinates : geometry.coordinates.flat();
-  if (!rings.length) return geometry;
-  const { minLon, maxLon, minLat, maxLat } = boundsOf(rings);
-  const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
-  const span = Math.max((maxLon - minLon) * k, maxLat - minLat);
-  const tolerance = span / 600; // ~0,3 px sur un encart de 170 px.
-
-  const simplifyRings = (list) =>
-    list.map((ring) => simplifyRing(ring, tolerance)).filter((ring) => ring.length >= 4);
-
-  if (geometry.type === 'Polygon') {
-    return { ...geometry, coordinates: simplifyRings(geometry.coordinates) };
-  }
-  if (geometry.type === 'MultiPolygon') {
-    return {
-      ...geometry,
-      coordinates: geometry.coordinates
-        .map(simplifyRings)
-        .filter((polygon) => polygon.length),
-    };
-  }
-  return geometry;
-}
-
-function countPoints(geometry) {
-  let total = 0;
-  const walk = (node) => {
-    if (typeof node[0] === 'number') total += 1;
-    else node.forEach(walk);
-  };
-  if (geometry) walk(geometry.coordinates);
-  return total;
-}
+const fetchFile = (file) => download(MIRRORS.map((mirror) => mirror + file));
 
 // --- Assemblage -------------------------------------------------------------
 
-const geojson = await download(MAINLAND_FILE);
+const geojson = await fetchFile(MAINLAND_FILE);
 if (!Array.isArray(geojson.features) || !geojson.features.length) {
   throw new Error('GeoJSON inattendu : aucune entité trouvée.');
 }
@@ -165,12 +38,14 @@ const missing = OVERSEAS_CODES.filter((code) => !present.has(code));
 
 if (missing.length) {
   process.stdout.write(`Outre-mer absent de ${MAINLAND_FILE} : ${missing.join(', ')}\n`);
-  const overseas = await download(OVERSEAS_FILE);
+  const overseas = await fetchFile(OVERSEAS_FILE);
   const wanted = new Set(missing);
   for (const feature of overseas.features || []) {
     const code = feature.properties?.code;
     if (!wanted.has(code)) continue;
     const before = countPoints(feature.geometry);
+    // Sans allègement, les cinq DOM — en pleine précision — pèseraient plus
+    // lourd que toute la métropole simplifiée, pour un rendu de 170 px de large.
     feature.geometry = simplifyGeometry(feature.geometry);
     const after = countPoints(feature.geometry);
     process.stdout.write(`  ${code} ${feature.properties?.nom} : ${before} → ${after} points\n`);
