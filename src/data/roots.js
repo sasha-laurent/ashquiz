@@ -1,0 +1,315 @@
+// Racines, préfixes et suffixes grecs et latins du français savant.
+//
+// Chaque entrée porte :
+//
+// - `code` — identifiant stable. Il sert de clé de statistiques : le changer
+//   perdrait la progression déjà enregistrée. Il est en ASCII, sans accent, et
+//   ne se confond jamais avec la graphie affichée (`ped-enfant` et `pede`).
+// - `form` — ce qui s'affiche dans l'énoncé. Le tiret dit déjà le type : « poly- »
+//   est un préfixe, « -logie » un suffixe.
+// - `type` — préfixe, suffixe ou radical, affiché en surtitre.
+// - `sens` — la réponse attendue, et `alias` les autres formulations acceptées.
+//   La première s'affiche à la correction. Elles comptent toutes dans le
+//   garde-fou de src/lib/text.js : une réponse qui est exactement le sens d'une
+//   *autre* racine n'est jamais rattrapée au titre de la faute de frappe.
+// - `origine` — 'grec' ou 'latin', la seconde sous-réponse.
+// - `famille` — champ sémantique. Il ne s'affiche nulle part : il sert à choisir
+//   les leurres du mode carré (voir src/lib/quiz-roots.js), pour que « poly- »
+//   se joue entre *plusieurs*, *tout*, *demi* et *un seul* plutôt qu'entre
+//   *plusieurs*, *pierre*, *cheval* et *écrire*.
+// - `exemples` — mots français bâtis sur la racine. Le premier est le coup de
+//   pouce (bouton « Voir un exemple ») ; tous s'affichent à la correction.
+// - `note` — facultative : le faux ami à signaler quand une autre racine s'écrit
+//   pareil (le grec péd- « enfant » et le latin ped- « pied »).
+//
+// Le corpus est **équilibré entre les deux origines** : sans cela, répondre
+// toujours « grec » paierait, et la sous-réponse ne mesurerait plus rien. Le
+// test `tests/roots.test.mjs` vérifie que l'écart reste faible.
+//
+// Les doublets (deux racines de même sens, une par langue : hydro-/aqua-,
+// poly-/multi-) ne sont pas déclarés : ils se déduisent du corpus, voir
+// `doublet()` plus bas.
+
+export const ROOTS = [
+  // ---------------------------------------------------------------- grec ----
+  { code: 'a-prive', form: 'a-, an-', type: 'préfixe', sens: 'sans', alias: ['privatif', 'absence', 'négation', 'pas de'], origine: 'grec', famille: 'relation', exemples: ['anonyme', 'athée', 'amoral', 'anesthésie'] },
+  { code: 'aero', form: 'aéro-', type: 'radical', sens: 'air', origine: 'grec', famille: 'nature', exemples: ['aéroport', 'aérodynamique', 'aérobie', 'aérosol'] },
+  { code: 'algie', form: '-algie', type: 'suffixe', sens: 'douleur', alias: ['mal', 'souffrance'], origine: 'grec', famille: 'santé', exemples: ['névralgie', 'nostalgie', 'lombalgie'] },
+  { code: 'amphi', form: 'amphi-', type: 'préfixe', sens: 'des deux côtés', alias: ['double', 'de part et d’autre', 'autour'], origine: 'grec', famille: 'quantité', exemples: ['amphithéâtre', 'amphibie', 'amphore'] },
+  { code: 'anthropo', form: 'anthropo-', type: 'radical', sens: 'homme', alias: ['être humain', 'humain'], origine: 'grec', famille: 'humain et société', exemples: ['anthropologie', 'misanthrope', 'philanthrope', 'anthropophage'] },
+  { code: 'arch', form: '-arque, -archie', type: 'suffixe', sens: 'commander', alias: ['chef', 'commandement', 'pouvoir'], origine: 'grec', famille: 'humain et société', exemples: ['monarchie', 'anarchie', 'hiérarchie', 'patriarche'] },
+  { code: 'archeo', form: 'archéo-', type: 'préfixe', sens: 'ancien', alias: ['antique', 'vieux'], origine: 'grec', famille: 'temps', exemples: ['archéologie', 'archaïque', 'archéoptéryx'] },
+  { code: 'astro', form: 'astro-, -astre', type: 'radical', sens: 'étoile', alias: ['astre'], origine: 'grec', famille: 'ciel et lumière', exemples: ['astronomie', 'astrologie', 'astronaute', 'désastre'] },
+  { code: 'auto', form: 'auto-', type: 'préfixe', sens: 'soi-même', alias: ['de soi-même', 'lui-même', 'soi'], origine: 'grec', famille: 'relation', exemples: ['autonome', 'autographe', 'autodidacte', 'automobile'] },
+  { code: 'biblio', form: 'biblio-', type: 'radical', sens: 'livre', origine: 'grec', famille: 'parole et écriture', exemples: ['bibliothèque', 'bibliographie', 'bibliophile'] },
+  { code: 'bio', form: 'bio-', type: 'radical', sens: 'vie', alias: ['vivant', 'vivre'], origine: 'grec', famille: 'vie et mort', exemples: ['biologie', 'biographie', 'antibiotique', 'microbe'] },
+  { code: 'cardio', form: 'cardio-', type: 'radical', sens: 'cœur', origine: 'grec', famille: 'corps', exemples: ['cardiologie', 'cardiaque', 'tachycardie'] },
+  { code: 'cephale', form: '-céphale', type: 'suffixe', sens: 'tête', origine: 'grec', famille: 'corps', exemples: ['encéphale', 'bicéphale', 'céphalée'] },
+  { code: 'chir', form: 'chir-, chiro-', type: 'radical', sens: 'main', origine: 'grec', famille: 'corps', exemples: ['chirurgie', 'chiropracteur', 'chiromancie'] },
+  { code: 'chromo', form: 'chromo-, -chrome', type: 'radical', sens: 'couleur', origine: 'grec', famille: 'qualité', exemples: ['polychrome', 'monochrome', 'chromatique'] },
+  { code: 'chrono', form: 'chrono-', type: 'radical', sens: 'temps', origine: 'grec', famille: 'temps', exemples: ['chronomètre', 'chronologie', 'anachronisme'] },
+  { code: 'cine', form: 'ciné-, kiné-', type: 'radical', sens: 'mouvement', alias: ['mouvoir', 'bouger'], origine: 'grec', famille: 'mouvement', exemples: ['cinéma', 'cinétique', 'kinésithérapie'] },
+  { code: 'cosmo', form: 'cosmo-, -cosme', type: 'radical', sens: 'monde', alias: ['univers'], origine: 'grec', famille: 'espace et lieu', exemples: ['cosmos', 'cosmopolite', 'microcosme'] },
+  { code: 'crate', form: '-crate, -cratie', type: 'suffixe', sens: 'pouvoir', alias: ['puissance', 'gouvernement'], origine: 'grec', famille: 'humain et société', exemples: ['démocratie', 'aristocratie', 'autocrate', 'bureaucratie'] },
+  { code: 'crypto', form: 'crypto-', type: 'préfixe', sens: 'caché', alias: ['secret', 'cacher'], origine: 'grec', famille: 'qualité', exemples: ['cryptographie', 'crypte', 'cryptogramme'] },
+  { code: 'cyclo', form: 'cyclo-, -cycle', type: 'radical', sens: 'cercle', alias: ['roue', 'cycle'], origine: 'grec', famille: 'forme', exemples: ['bicyclette', 'cyclone', 'encyclopédie'] },
+  { code: 'dactylo', form: 'dactylo-, -dactyle', type: 'radical', sens: 'doigt', origine: 'grec', famille: 'corps', exemples: ['dactylographie', 'ptérodactyle', 'dactylographe'] },
+  { code: 'demo', form: 'démo-', type: 'radical', sens: 'peuple', origine: 'grec', famille: 'humain et société', exemples: ['démocratie', 'démographie', 'épidémie'] },
+  { code: 'derme', form: 'derm-, -derme', type: 'radical', sens: 'peau', origine: 'grec', famille: 'corps', exemples: ['dermatologie', 'épiderme', 'pachyderme'] },
+  { code: 'di', form: 'di-', type: 'préfixe', sens: 'deux', alias: ['double', 'deux fois'], origine: 'grec', famille: 'quantité', exemples: ['dioxyde', 'diptyque', 'dilemme', 'diphtongue'] },
+  { code: 'dia', form: 'dia-', type: 'préfixe', sens: 'à travers', alias: ['au travers', 'par'], origine: 'grec', famille: 'espace et lieu', exemples: ['diagonale', 'diamètre', 'diaphragme', 'diagnostic'] },
+  { code: 'drome', form: '-drome', type: 'suffixe', sens: 'course', alias: ['courir', 'piste'], origine: 'grec', famille: 'mouvement', exemples: ['hippodrome', 'aérodrome', 'vélodrome', 'syndrome'] },
+  { code: 'dynamo', form: 'dyna-, dynamo-', type: 'radical', sens: 'force', alias: ['puissance', 'énergie'], origine: 'grec', famille: 'action', exemples: ['dynamique', 'dynamite', 'dynamomètre'] },
+  { code: 'dys', form: 'dys-', type: 'préfixe', sens: 'difficulté', alias: ['trouble', 'mauvais fonctionnement', 'mal'], origine: 'grec', famille: 'qualité', exemples: ['dyslexie', 'dysfonctionnement', 'dyspepsie'] },
+  { code: 'endo', form: 'endo-', type: 'préfixe', sens: "à l'intérieur", alias: ['dedans', 'intérieur', 'en dedans'], origine: 'grec', famille: 'espace et lieu', exemples: ['endoscopie', 'endogène', 'endocrine'] },
+  { code: 'epi', form: 'épi-', type: 'préfixe', sens: 'sur', alias: ['au-dessus', 'par-dessus'], origine: 'grec', famille: 'espace et lieu', exemples: ['épiderme', 'épitaphe', 'épicentre', 'épilogue'] },
+  { code: 'ergo', form: 'ergo-, -urgie', type: 'radical', sens: 'travail', alias: ['œuvre', 'action'], origine: 'grec', famille: 'action', exemples: ['ergonomie', 'énergie', 'métallurgie', 'chirurgie'] },
+  { code: 'ethno', form: 'ethno-', type: 'radical', sens: 'ethnie', alias: ['peuple'], origine: 'grec', famille: 'humain et société', exemples: ['ethnologie', 'ethnique', 'ethnocentrisme'] },
+  { code: 'eu', form: 'eu-', type: 'préfixe', sens: 'bien', alias: ['bon', 'heureux'], origine: 'grec', famille: 'qualité', exemples: ['euphorie', 'euthanasie', 'euphémisme', 'eugénisme'] },
+  { code: 'gastro', form: 'gastro-', type: 'radical', sens: 'estomac', alias: ['ventre'], origine: 'grec', famille: 'corps', exemples: ['gastronomie', 'gastrique', 'gastro-entérite'] },
+  { code: 'gene', form: '-gène', type: 'suffixe', sens: 'engendrer', alias: ['qui engendre', 'produire', 'qui produit'], origine: 'grec', famille: 'vie et mort', exemples: ['pathogène', 'cancérigène', 'hydrogène', 'homogène'] },
+  { code: 'geo', form: 'géo-', type: 'radical', sens: 'terre', origine: 'grec', famille: 'nature', exemples: ['géographie', 'géologie', 'géothermie', 'apogée'] },
+  { code: 'glotte', form: '-glotte, glosso-', type: 'radical', sens: 'langue', origine: 'grec', famille: 'parole et écriture', exemples: ['polyglotte', 'épiglotte', 'glossaire'] },
+  { code: 'gone', form: '-gone', type: 'suffixe', sens: 'angle', origine: 'grec', famille: 'forme', exemples: ['polygone', 'hexagone', 'pentagone', 'diagonale'] },
+  { code: 'gramme', form: '-gramme', type: 'suffixe', sens: 'lettre', alias: ['signe écrit', 'trait', 'écrit'], origine: 'grec', famille: 'parole et écriture', exemples: ['télégramme', 'diagramme', 'anagramme', 'programme'] },
+  { code: 'graphe', form: '-graphe, -graphie', type: 'suffixe', sens: 'écrire', alias: ['écriture', 'tracer'], origine: 'grec', famille: 'parole et écriture', exemples: ['orthographe', 'géographie', 'calligraphie', 'autographe'] },
+  { code: 'gyneco', form: 'gyné-, gynéco-', type: 'radical', sens: 'femme', origine: 'grec', famille: 'humain et société', exemples: ['gynécologie', 'misogyne', 'androgyne'] },
+  { code: 'helio', form: 'hélio-', type: 'radical', sens: 'soleil', origine: 'grec', famille: 'ciel et lumière', exemples: ['héliocentrique', 'héliotrope', 'héliogravure'] },
+  { code: 'hemi', form: 'hémi-', type: 'préfixe', sens: 'demi', alias: ['moitié', 'à moitié'], origine: 'grec', famille: 'quantité', exemples: ['hémisphère', 'hémicycle', 'hémiplégie'] },
+  { code: 'hemo', form: 'hémo-, hémat-', type: 'radical', sens: 'sang', origine: 'grec', famille: 'corps', exemples: ['hémorragie', 'hématome', 'hémoglobine'] },
+  { code: 'hetero', form: 'hétéro-', type: 'préfixe', sens: 'autre', alias: ['différent', 'différence'], origine: 'grec', famille: 'relation', exemples: ['hétérogène', 'hétéroclite', 'hétérosexuel'] },
+  { code: 'hexa', form: 'hexa-', type: 'préfixe', sens: 'six', origine: 'grec', famille: 'quantité', exemples: ['hexagone', 'hexamètre', 'hexaèdre'] },
+  { code: 'hippo', form: 'hippo-', type: 'radical', sens: 'cheval', origine: 'grec', famille: 'animaux et plantes', exemples: ['hippodrome', 'hippopotame', 'hippique'] },
+  { code: 'homo', form: 'homo-', type: 'préfixe', sens: 'semblable', alias: ['même', 'identique', 'pareil'], origine: 'grec', famille: 'relation', exemples: ['homogène', 'homonyme', 'homographe'], note: 'Le latin homo « homme » s’écrit pareil : homicide, hominidé.' },
+  { code: 'hydro', form: 'hydro-', type: 'radical', sens: 'eau', origine: 'grec', famille: 'nature', exemples: ['hydraulique', 'hydrogène', 'déshydraté', 'hydrophile'] },
+  { code: 'hyper', form: 'hyper-', type: 'préfixe', sens: 'au-dessus', alias: ['excès', 'trop', 'sur'], origine: 'grec', famille: 'espace et lieu', exemples: ['hypermarché', 'hypertension', 'hyperbole'] },
+  { code: 'hypo', form: 'hypo-', type: 'préfixe', sens: 'sous', alias: ['en dessous', 'insuffisance', 'au-dessous'], origine: 'grec', famille: 'espace et lieu', exemples: ['hypothèse', 'hypoglycémie', 'hypodermique'] },
+  { code: 'iatre', form: '-iatre, -iatrie', type: 'suffixe', sens: 'médecin', alias: ['médecine', 'soigner'], origine: 'grec', famille: 'santé', exemples: ['pédiatre', 'psychiatre', 'gériatrie'] },
+  { code: 'iso', form: 'iso-', type: 'préfixe', sens: 'égal', alias: ['même', 'identique'], origine: 'grec', famille: 'quantité', exemples: ['isotherme', 'isocèle', 'isométrique'] },
+  { code: 'kilo', form: 'kilo-', type: 'préfixe', sens: 'mille', origine: 'grec', famille: 'quantité', exemples: ['kilogramme', 'kilomètre', 'kilowatt'] },
+  { code: 'litho', form: 'litho-, -lithe', type: 'radical', sens: 'pierre', origine: 'grec', famille: 'nature', exemples: ['monolithe', 'néolithique', 'lithographie'] },
+  { code: 'logo', form: '-logie, logo-', type: 'suffixe', sens: 'parole', alias: ['discours', 'étude', 'science', 'raison'], origine: 'grec', famille: 'parole et écriture', exemples: ['dialogue', 'monologue', 'logique', 'biologie'] },
+  { code: 'macro', form: 'macro-', type: 'préfixe', sens: 'grand', alias: ['long', 'à grande échelle'], origine: 'grec', famille: 'taille', exemples: ['macroéconomie', 'macroscopique', 'macrocosme'] },
+  { code: 'mega', form: 'méga-', type: 'préfixe', sens: 'très grand', alias: ['grand', 'million'], origine: 'grec', famille: 'taille', exemples: ['mégaphone', 'mégalithe', 'mégapole'] },
+  { code: 'melano', form: 'mélan-, mélano-', type: 'radical', sens: 'noir', origine: 'grec', famille: 'qualité', exemples: ['mélancolie', 'mélanine', 'mélanome'] },
+  { code: 'meso', form: 'méso-', type: 'préfixe', sens: 'au milieu', alias: ['médian', 'intermédiaire'], origine: 'grec', famille: 'espace et lieu', exemples: ['Mésopotamie', 'mésolithique', 'mésosphère'] },
+  { code: 'meta', form: 'méta-', type: 'préfixe', sens: 'au-delà', alias: ['après', 'changement', 'transformation'], origine: 'grec', famille: 'relation', exemples: ['métamorphose', 'métaphore', 'métaphysique'] },
+  { code: 'metre', form: '-mètre, métro-', type: 'suffixe', sens: 'mesure', alias: ['mesurer'], origine: 'grec', famille: 'quantité', exemples: ['thermomètre', 'périmètre', 'géométrie', 'symétrie'] },
+  { code: 'micro', form: 'micro-', type: 'préfixe', sens: 'petit', origine: 'grec', famille: 'taille', exemples: ['microscope', 'microbe', 'micro-ondes'] },
+  { code: 'miso', form: 'miso-', type: 'radical', sens: 'haïr', alias: ['haine', 'détester'], origine: 'grec', famille: 'sentiment', exemples: ['misanthrope', 'misogyne', 'misandre'] },
+  { code: 'mnemo', form: 'mnémo-, -mnésie', type: 'radical', sens: 'mémoire', alias: ['souvenir', 'se souvenir'], origine: 'grec', famille: 'pensée et croyances', exemples: ['mnémotechnique', 'amnésie', 'amnistie'] },
+  { code: 'mono', form: 'mono-', type: 'préfixe', sens: 'un seul', alias: ['seul', 'un', 'unique'], origine: 'grec', famille: 'quantité', exemples: ['monarchie', 'monologue', 'monotone', 'monopole'] },
+  { code: 'morphe', form: 'morpho-, -morphe', type: 'radical', sens: 'forme', origine: 'grec', famille: 'forme', exemples: ['amorphe', 'métamorphose', 'morphologie', 'anthropomorphe'] },
+  { code: 'necro', form: 'nécro-', type: 'radical', sens: 'mort', origine: 'grec', famille: 'vie et mort', exemples: ['nécropole', 'nécrologie', 'nécrose'] },
+  { code: 'neo', form: 'néo-', type: 'préfixe', sens: 'nouveau', alias: ['neuf', 'récent'], origine: 'grec', famille: 'temps', exemples: ['néologisme', 'néolithique', 'néophyte'] },
+  { code: 'neuro', form: 'neuro-, névr-', type: 'radical', sens: 'nerf', origine: 'grec', famille: 'corps', exemples: ['neurologie', 'névrose', 'neurone'] },
+  { code: 'nome', form: '-nome, -nomie', type: 'suffixe', sens: 'loi', alias: ['règle', 'gestion', 'administration'], origine: 'grec', famille: 'humain et société', exemples: ['autonome', 'astronomie', 'économie', 'gastronomie'] },
+  { code: 'odonto', form: 'odonto-, -odonte', type: 'radical', sens: 'dent', origine: 'grec', famille: 'corps', exemples: ['orthodontie', 'mastodonte', 'odontologie'] },
+  { code: 'oide', form: '-oïde', type: 'suffixe', sens: 'en forme de', alias: ['qui a la forme de', 'semblable à'], origine: 'grec', famille: 'forme', exemples: ['ovoïde', 'astéroïde', 'humanoïde'] },
+  { code: 'oligo', form: 'oligo-', type: 'préfixe', sens: 'peu nombreux', alias: ['peu', 'en petit nombre', 'rare'], origine: 'grec', famille: 'quantité', exemples: ['oligarchie', 'oligo-élément', 'oligopole'] },
+  { code: 'onyme', form: '-onyme', type: 'suffixe', sens: 'nom', origine: 'grec', famille: 'parole et écriture', exemples: ['synonyme', 'anonyme', 'pseudonyme', 'patronyme'] },
+  { code: 'ophtalmo', form: 'ophtalmo-', type: 'radical', sens: 'œil', origine: 'grec', famille: 'corps', exemples: ['ophtalmologie', 'ophtalmique', 'exophtalmie'] },
+  { code: 'ornitho', form: 'ornitho-', type: 'radical', sens: 'oiseau', origine: 'grec', famille: 'animaux et plantes', exemples: ['ornithologie', 'ornithorynque', 'ornithologue'] },
+  { code: 'ortho', form: 'ortho-', type: 'préfixe', sens: 'droit', alias: ['correct', 'régulier', 'juste'], origine: 'grec', famille: 'qualité', exemples: ['orthographe', 'orthopédie', 'orthodoxe'] },
+  { code: 'osteo', form: 'ostéo-', type: 'radical', sens: 'os', origine: 'grec', famille: 'corps', exemples: ['ostéopathe', 'ostéoporose', 'ostéite'] },
+  { code: 'paleo', form: 'paléo-', type: 'préfixe', sens: 'très ancien', alias: ['ancien', 'préhistorique'], origine: 'grec', famille: 'temps', exemples: ['paléolithique', 'paléontologie', 'paléographie'] },
+  { code: 'pan', form: 'pan-, panto-', type: 'préfixe', sens: 'tout', alias: ['tous', 'entier'], origine: 'grec', famille: 'quantité', exemples: ['panorama', 'pandémie', 'panthéon', 'pantomime'] },
+  { code: 'para', form: 'para-', type: 'préfixe', sens: 'à côté de', alias: ['auprès de', 'à côté', 'contre'], origine: 'grec', famille: 'espace et lieu', exemples: ['parallèle', 'paradoxe', 'parasite', 'paramédical'], note: 'Le para- de parapluie et parachute vient de l’italien parare « protéger » : autre histoire, même graphie.' },
+  { code: 'patho', form: 'patho-, -pathie', type: 'radical', sens: 'souffrance', alias: ['maladie', 'souffrir'], origine: 'grec', famille: 'santé', exemples: ['pathologie', 'sympathie', 'psychopathe', 'homéopathie'] },
+  { code: 'ped-enfant', form: 'péd-, pédo-', type: 'préfixe', sens: 'enfant', alias: ['enfance'], origine: 'grec', famille: 'humain et société', exemples: ['pédiatre', 'pédagogie', 'encyclopédie'], note: 'Le latin pes, pedis « pied » s’écrit pareil : pédale, pédestre, bipède.' },
+  { code: 'penta', form: 'penta-', type: 'préfixe', sens: 'cinq', origine: 'grec', famille: 'quantité', exemples: ['pentagone', 'pentathlon', 'pentagramme'] },
+  { code: 'peri', form: 'péri-', type: 'préfixe', sens: 'autour', alias: ['autour de'], origine: 'grec', famille: 'espace et lieu', exemples: ['périmètre', 'périphérie', 'périscope', 'péricarde'] },
+  { code: 'phage', form: '-phage, phago-', type: 'suffixe', sens: 'manger', alias: ['dévorer', 'qui mange'], origine: 'grec', famille: 'action', exemples: ['anthropophage', 'œsophage', 'phagocyte', 'bactériophage'] },
+  { code: 'phile', form: 'phil-, -phile', type: 'radical', sens: 'aimer', alias: ['ami', 'amour', 'qui aime'], origine: 'grec', famille: 'sentiment', exemples: ['philosophie', 'francophile', 'philanthrope', 'bibliophile'] },
+  { code: 'phobe', form: '-phobe, -phobie', type: 'suffixe', sens: 'peur', alias: ['crainte', 'qui craint'], origine: 'grec', famille: 'sentiment', exemples: ['claustrophobie', 'xénophobe', 'hydrophobe'] },
+  { code: 'phone', form: '-phone, phono-', type: 'suffixe', sens: 'son', alias: ['voix', 'bruit'], origine: 'grec', famille: 'parole et écriture', exemples: ['téléphone', 'symphonie', 'phonétique', 'francophone'] },
+  { code: 'phore', form: '-phore', type: 'suffixe', sens: 'porter', alias: ['qui porte'], origine: 'grec', famille: 'action', exemples: ['sémaphore', 'métaphore', 'amphore', 'phosphore'] },
+  { code: 'photo', form: 'photo-', type: 'radical', sens: 'lumière', alias: ['clarté'], origine: 'grec', famille: 'ciel et lumière', exemples: ['photographie', 'photosynthèse', 'photon'] },
+  { code: 'phyto', form: 'phyto-, -phyte', type: 'radical', sens: 'plante', alias: ['végétal'], origine: 'grec', famille: 'animaux et plantes', exemples: ['phytothérapie', 'néophyte', 'phytoplancton'] },
+  { code: 'pneumo', form: 'pneumo-', type: 'radical', sens: 'souffle', alias: ['poumon', 'respiration', 'air'], origine: 'grec', famille: 'corps', exemples: ['pneumonie', 'pneumatique', 'pneumothorax'] },
+  { code: 'pode', form: '-pode, podo-', type: 'suffixe', sens: 'pied', origine: 'grec', famille: 'corps', exemples: ['podologue', 'arthropode', 'myriapode', 'antipode'] },
+  { code: 'pole', form: '-pole, polit-', type: 'suffixe', sens: 'ville', alias: ['cité'], origine: 'grec', famille: 'espace et lieu', exemples: ['métropole', 'nécropole', 'acropole', 'politique'] },
+  { code: 'poly', form: 'poly-', type: 'préfixe', sens: 'plusieurs', alias: ['nombreux', 'multiple', 'beaucoup'], origine: 'grec', famille: 'quantité', exemples: ['polygone', 'polyglotte', 'polychrome', 'polygame'] },
+  { code: 'proto', form: 'proto-', type: 'préfixe', sens: 'premier', alias: ['primitif', 'originel'], origine: 'grec', famille: 'temps', exemples: ['prototype', 'protozoaire', 'protocole', 'protohistoire'] },
+  { code: 'pseudo', form: 'pseudo-', type: 'préfixe', sens: 'faux', alias: ['mensonger', 'trompeur'], origine: 'grec', famille: 'qualité', exemples: ['pseudonyme', 'pseudopode', 'pseudo-science'] },
+  { code: 'psycho', form: 'psycho-', type: 'radical', sens: 'âme', alias: ['esprit', 'psychisme'], origine: 'grec', famille: 'pensée et croyances', exemples: ['psychologie', 'psychiatre', 'psychanalyse'] },
+  { code: 'ptero', form: 'ptéro-, -ptère', type: 'radical', sens: 'aile', origine: 'grec', famille: 'animaux et plantes', exemples: ['hélicoptère', 'ptérodactyle', 'coléoptère', 'diptère'] },
+  { code: 'pyro', form: 'pyro-', type: 'radical', sens: 'feu', origine: 'grec', famille: 'nature', exemples: ['pyromane', 'pyrotechnie', 'pyrogravure'] },
+  { code: 'rragie', form: '-rragie, -rrhée', type: 'suffixe', sens: 'couler', alias: ['jaillir', 'écoulement'], origine: 'grec', famille: 'mouvement', exemples: ['hémorragie', 'diarrhée', 'logorrhée'] },
+  { code: 'scope', form: '-scope, -scopie', type: 'suffixe', sens: 'examiner', alias: ['observer', 'regarder', 'voir'], origine: 'grec', famille: 'perception', exemples: ['microscope', 'télescope', 'endoscopie', 'horoscope'] },
+  { code: 'sema', form: 'sémio-, -sème', type: 'radical', sens: 'signe', origine: 'grec', famille: 'parole et écriture', exemples: ['sémantique', 'sémiologie', 'polysémie', 'sémaphore'] },
+  { code: 'sophie', form: '-sophie, sopho-', type: 'suffixe', sens: 'sagesse', alias: ['savoir', 'sage'], origine: 'grec', famille: 'pensée et croyances', exemples: ['philosophie', 'théosophie', 'sophistiqué'] },
+  { code: 'sphere', form: '-sphère', type: 'suffixe', sens: 'boule', alias: ['globe', 'sphère'], origine: 'grec', famille: 'forme', exemples: ['atmosphère', 'hémisphère', 'biosphère', 'stratosphère'] },
+  { code: 'syn', form: 'syn-, sym-', type: 'préfixe', sens: 'avec', alias: ['ensemble', 'union'], origine: 'grec', famille: 'relation', exemples: ['synonyme', 'symphonie', 'sympathie', 'synthèse'] },
+  { code: 'tachy', form: 'tachy-', type: 'préfixe', sens: 'rapide', alias: ['vitesse', 'vite'], origine: 'grec', famille: 'mouvement', exemples: ['tachycardie', 'tachymètre', 'tachygraphe'] },
+  { code: 'techno', form: 'techno-, -technie', type: 'radical', sens: 'métier', alias: ['art', 'savoir-faire', 'technique'], origine: 'grec', famille: 'action', exemples: ['technologie', 'pyrotechnie', 'technocrate'] },
+  { code: 'tele', form: 'télé-', type: 'préfixe', sens: 'loin', alias: ['à distance', 'au loin'], origine: 'grec', famille: 'espace et lieu', exemples: ['télévision', 'téléphone', 'télescope', 'télépathie'] },
+  { code: 'tetra', form: 'tétra-', type: 'préfixe', sens: 'quatre', origine: 'grec', famille: 'quantité', exemples: ['tétraèdre', 'tétralogie', 'tétraplégie'] },
+  { code: 'thalasso', form: 'thalasso-', type: 'radical', sens: 'mer', origine: 'grec', famille: 'nature', exemples: ['thalassothérapie', 'thalassocratie'] },
+  { code: 'theo', form: 'théo-', type: 'radical', sens: 'dieu', origine: 'grec', famille: 'pensée et croyances', exemples: ['théologie', 'athée', 'monothéisme', 'panthéon'] },
+  { code: 'theque', form: '-thèque', type: 'suffixe', sens: 'armoire', alias: ['coffre', 'rangement', 'dépôt'], origine: 'grec', famille: 'parole et écriture', exemples: ['bibliothèque', 'discothèque', 'ludothèque', 'vidéothèque'] },
+  { code: 'therapie', form: '-thérapie', type: 'suffixe', sens: 'soin', alias: ['traitement', 'soigner', 'cure'], origine: 'grec', famille: 'santé', exemples: ['psychothérapie', 'kinésithérapie', 'chimiothérapie'] },
+  { code: 'thermo', form: 'thermo-, -therme', type: 'radical', sens: 'chaleur', origine: 'grec', famille: 'nature', exemples: ['thermomètre', 'thermique', 'isotherme', 'hypothermie'] },
+  { code: 'these', form: '-thèse, thét-', type: 'suffixe', sens: 'poser', alias: ['placer', 'mettre'], origine: 'grec', famille: 'action', exemples: ['hypothèse', 'synthèse', 'parenthèse', 'prothèse'] },
+  { code: 'tomie', form: '-tomie, -tome', type: 'suffixe', sens: 'couper', alias: ['coupure', 'section', 'division'], origine: 'grec', famille: 'action', exemples: ['anatomie', 'dichotomie', 'lobotomie', 'atome'] },
+  { code: 'topo', form: 'topo-', type: 'radical', sens: 'lieu', alias: ['endroit', 'place'], origine: 'grec', famille: 'espace et lieu', exemples: ['topographie', 'toponymie', 'utopie', 'isotope'] },
+  { code: 'type', form: '-type, typo-', type: 'suffixe', sens: 'empreinte', alias: ['marque', 'modèle', 'caractère'], origine: 'grec', famille: 'forme', exemples: ['prototype', 'typographie', 'stéréotype', 'archétype'] },
+  { code: 'xeno', form: 'xéno-', type: 'préfixe', sens: 'étranger', origine: 'grec', famille: 'humain et société', exemples: ['xénophobe', 'xénophile', 'xénogreffe'] },
+  { code: 'xylo', form: 'xylo-', type: 'radical', sens: 'bois', origine: 'grec', famille: 'nature', exemples: ['xylophone', 'xylographie', 'xylophage'] },
+  { code: 'zoo', form: 'zoo-, -zoaire', type: 'radical', sens: 'animal', origine: 'grec', famille: 'animaux et plantes', exemples: ['zoologie', 'protozoaire', 'zoophile'] },
+
+  // --------------------------------------------------------------- latin ----
+  { code: 'agri', form: 'agri-, agro-', type: 'radical', sens: 'champ', alias: ['terre cultivée', 'campagne'], origine: 'latin', famille: 'nature', exemples: ['agriculture', 'agraire', 'agronomie'] },
+  { code: 'alti', form: 'alti-', type: 'radical', sens: 'haut', alias: ['hauteur', 'élevé'], origine: 'latin', famille: 'taille', exemples: ['altitude', 'altimètre', 'altier'] },
+  { code: 'am', form: 'am-, ami-', type: 'radical', sens: 'aimer', alias: ['ami', 'amour'], origine: 'latin', famille: 'sentiment', exemples: ['amitié', 'amical', 'amateur', 'amour'] },
+  { code: 'ambi', form: 'ambi-', type: 'préfixe', sens: 'des deux côtés', alias: ['double', 'les deux'], origine: 'latin', famille: 'quantité', exemples: ['ambidextre', 'ambivalent', 'ambigu'] },
+  { code: 'anim', form: 'anim-', type: 'radical', sens: 'souffle', alias: ['âme', 'vie'], origine: 'latin', famille: 'vie et mort', exemples: ['animal', 'animer', 'unanime', 'réanimation'] },
+  { code: 'annu', form: 'ann-, annu-', type: 'radical', sens: 'année', alias: ['an'], origine: 'latin', famille: 'temps', exemples: ['annuel', 'anniversaire', 'biennale', 'annales'] },
+  { code: 'aqua', form: 'aqua-, aqui-', type: 'radical', sens: 'eau', origine: 'latin', famille: 'nature', exemples: ['aquarium', 'aquatique', 'aqueduc', 'aquarelle'] },
+  { code: 'arbor', form: 'arbor-', type: 'radical', sens: 'arbre', origine: 'latin', famille: 'animaux et plantes', exemples: ['arboriculture', 'arborescent', 'arboretum'] },
+  { code: 'audi', form: 'audi-', type: 'radical', sens: 'entendre', alias: ['écouter', 'ouïe'], origine: 'latin', famille: 'perception', exemples: ['audition', 'audible', 'auditoire', 'audiovisuel'] },
+  { code: 'avi', form: 'avi-', type: 'radical', sens: 'oiseau', origine: 'latin', famille: 'animaux et plantes', exemples: ['aviation', 'aviculture', 'aviaire'] },
+  { code: 'bell', form: 'belli-', type: 'radical', sens: 'guerre', origine: 'latin', famille: 'humain et société', exemples: ['belliqueux', 'belligérant', 'rebelle'] },
+  { code: 'bi', form: 'bi-, bis-', type: 'préfixe', sens: 'deux', alias: ['double', 'deux fois'], origine: 'latin', famille: 'quantité', exemples: ['bicyclette', 'bilingue', 'bipède', 'bimensuel'] },
+  { code: 'brev', form: 'brev-, abrév-', type: 'radical', sens: 'court', alias: ['bref', 'brièveté'], origine: 'latin', famille: 'taille', exemples: ['abréger', 'abréviation', 'brièveté', 'bréviaire'] },
+  { code: 'calor', form: 'calor-', type: 'radical', sens: 'chaleur', origine: 'latin', famille: 'nature', exemples: ['calorie', 'calorifère', 'calorique'] },
+  { code: 'can', form: 'can-', type: 'radical', sens: 'chien', origine: 'latin', famille: 'animaux et plantes', exemples: ['canin', 'canidé', 'caniche', 'canicule'] },
+  { code: 'cand', form: 'cand-', type: 'radical', sens: 'blanc', alias: ['brillant', 'éclatant'], origine: 'latin', famille: 'qualité', exemples: ['candide', 'candidat', 'incandescent'] },
+  { code: 'capit', form: 'cap-, capit-', type: 'radical', sens: 'tête', origine: 'latin', famille: 'corps', exemples: ['capitaine', 'décapiter', 'chapitre', 'capital'] },
+  { code: 'capt', form: 'capt-, -cept-', type: 'radical', sens: 'prendre', alias: ['saisir', 'attraper'], origine: 'latin', famille: 'action', exemples: ['capturer', 'réception', 'intercepter', 'concept'] },
+  { code: 'carn', form: 'carn-', type: 'radical', sens: 'chair', alias: ['viande'], origine: 'latin', famille: 'corps', exemples: ['carnivore', 'carnage', 'incarner', 'carnation'] },
+  { code: 'cent', form: 'cent-', type: 'préfixe', sens: 'cent', origine: 'latin', famille: 'quantité', exemples: ['centenaire', 'centimètre', 'pourcentage', 'centuple'] },
+  { code: 'cide', form: '-cide', type: 'suffixe', sens: 'tuer', alias: ['meurtre', 'qui tue'], origine: 'latin', famille: 'action', exemples: ['homicide', 'suicide', 'insecticide', 'régicide'] },
+  { code: 'circum', form: 'circum-, circon-', type: 'préfixe', sens: 'autour', alias: ['autour de'], origine: 'latin', famille: 'espace et lieu', exemples: ['circonférence', 'circonstance', 'circumnavigation'] },
+  { code: 'cole', form: '-cole, cult-', type: 'suffixe', sens: 'cultiver', alias: ['culture', 'habiter'], origine: 'latin', famille: 'action', exemples: ['agricole', 'viticole', 'arboricole', 'culture'] },
+  { code: 'cord', form: 'cord-', type: 'radical', sens: 'cœur', origine: 'latin', famille: 'corps', exemples: ['cordial', 'accord', 'courage', 'miséricorde'] },
+  { code: 'corp', form: 'corp-, corpor-', type: 'radical', sens: 'corps', origine: 'latin', famille: 'corps', exemples: ['corporel', 'incorporer', 'corpulent', 'corpus'] },
+  { code: 'curr', form: 'curr-, curs-', type: 'radical', sens: 'courir', alias: ['course', 'cours'], origine: 'latin', famille: 'mouvement', exemples: ['concurrent', 'cursus', 'excursion', 'parcours'] },
+  { code: 'cut', form: 'cut-', type: 'radical', sens: 'peau', origine: 'latin', famille: 'corps', exemples: ['cutané', 'sous-cutané', 'cuticule'] },
+  { code: 'dei', form: 'déi-, div-', type: 'radical', sens: 'dieu', origine: 'latin', famille: 'pensée et croyances', exemples: ['déifier', 'divin', 'divinité', 'déité'] },
+  { code: 'dent', form: 'dent-', type: 'radical', sens: 'dent', origine: 'latin', famille: 'corps', exemples: ['dentiste', 'dentaire', 'trident', 'édenté'] },
+  { code: 'dext', form: 'dextr-', type: 'radical', sens: 'droite', alias: ['à droite', 'main droite'], origine: 'latin', famille: 'espace et lieu', exemples: ['dextérité', 'ambidextre', 'dextre'] },
+  { code: 'dict', form: 'dict-', type: 'radical', sens: 'dire', alias: ['parler', 'dit'], origine: 'latin', famille: 'parole et écriture', exemples: ['dictée', 'contredire', 'verdict', 'prédiction'] },
+  { code: 'digit', form: 'digit-', type: 'radical', sens: 'doigt', origine: 'latin', famille: 'corps', exemples: ['digital', 'digitale', 'digitigrade'] },
+  { code: 'dol', form: 'dol-', type: 'radical', sens: 'douleur', alias: ['souffrance', 'mal'], origine: 'latin', famille: 'santé', exemples: ['indolore', 'doléance', 'condoléances'] },
+  { code: 'duc', form: 'duc-, duct-', type: 'radical', sens: 'conduire', alias: ['mener', 'guider'], origine: 'latin', famille: 'action', exemples: ['conduire', 'aqueduc', 'produire', 'éduquer'] },
+  { code: 'equi', form: 'équi-', type: 'préfixe', sens: 'égal', alias: ['également', 'même'], origine: 'latin', famille: 'quantité', exemples: ['équilibre', 'équivalent', 'équidistant', 'équateur'], note: 'Le latin equus « cheval » s’écrit pareil : équitation, équidé, équestre.' },
+  { code: 'extra', form: 'extra-', type: 'préfixe', sens: 'en dehors', alias: ['hors de', 'dehors', 'au-delà'], origine: 'latin', famille: 'espace et lieu', exemples: ['extraordinaire', 'extraterrestre', 'extraire'] },
+  { code: 'fact', form: 'fact-, -fic-', type: 'radical', sens: 'faire', alias: ['fabriquer'], origine: 'latin', famille: 'action', exemples: ['fabrique', 'manufacture', 'bénéfique', 'facteur'] },
+  { code: 'fere', form: '-fère', type: 'suffixe', sens: 'porter', alias: ['qui porte', 'produire'], origine: 'latin', famille: 'action', exemples: ['mammifère', 'conifère', 'somnifère', 'aurifère'] },
+  { code: 'ferr', form: 'ferr-', type: 'radical', sens: 'fer', origine: 'latin', famille: 'nature', exemples: ['ferreux', 'ferronnerie', 'ferroviaire'] },
+  { code: 'fid', form: 'fid-', type: 'radical', sens: 'foi', alias: ['confiance', 'fidélité'], origine: 'latin', famille: 'sentiment', exemples: ['fidèle', 'perfide', 'confiance', 'fiancé'] },
+  { code: 'fili', form: 'fili-', type: 'radical', sens: 'fils', alias: ['filiation', 'enfant'], origine: 'latin', famille: 'famille', exemples: ['filial', 'filiation', 'affilier'] },
+  { code: 'flor', form: 'flor-', type: 'radical', sens: 'fleur', origine: 'latin', famille: 'animaux et plantes', exemples: ['floral', 'floraison', 'flore', 'défloration'] },
+  { code: 'flu', form: 'flu-, flux', type: 'radical', sens: 'couler', alias: ['écoulement', 'flot'], origine: 'latin', famille: 'mouvement', exemples: ['fluide', 'affluent', 'fluvial', 'influence'] },
+  { code: 'fort', form: 'fort-', type: 'radical', sens: 'fort', alias: ['force', 'solide'], origine: 'latin', famille: 'qualité', exemples: ['fortifier', 'forteresse', 'réconfort', 'fortitude'] },
+  { code: 'fract', form: 'fract-, frag-', type: 'radical', sens: 'briser', alias: ['casser', 'rompre'], origine: 'latin', famille: 'action', exemples: ['fracture', 'fragile', 'fragment', 'réfraction'] },
+  { code: 'frater', form: 'frater-, fratri-', type: 'radical', sens: 'frère', origine: 'latin', famille: 'famille', exemples: ['fraternel', 'fratrie', 'fratricide', 'confrérie'] },
+  { code: 'fuge', form: '-fuge', type: 'suffixe', sens: 'fuir', alias: ['chasser', 'faire fuir', 'qui fuit'], origine: 'latin', famille: 'mouvement', exemples: ['centrifuge', 'transfuge', 'vermifuge', 'ignifuge'] },
+  { code: 'grad', form: 'grad-, gress-', type: 'radical', sens: 'marcher', alias: ['pas', 'avancer', 'degré'], origine: 'latin', famille: 'mouvement', exemples: ['progrès', 'dégrader', 'agression', 'rétrograde'] },
+  { code: 'grav', form: 'grav-', type: 'radical', sens: 'lourd', alias: ['pesant', 'poids', 'pesanteur'], origine: 'latin', famille: 'quantité', exemples: ['gravité', 'aggraver', 'graviter'] },
+  { code: 'herb', form: 'herb-', type: 'radical', sens: 'herbe', origine: 'latin', famille: 'animaux et plantes', exemples: ['herbivore', 'herbier', 'herbicide', 'herboriste'] },
+  { code: 'ign', form: 'ign-', type: 'radical', sens: 'feu', origine: 'latin', famille: 'nature', exemples: ['ignition', 'igné', 'ignifuge'] },
+  { code: 'infra', form: 'infra-', type: 'préfixe', sens: 'en dessous', alias: ['au-dessous', 'sous'], origine: 'latin', famille: 'espace et lieu', exemples: ['infrarouge', 'infrastructure', 'infrason'] },
+  { code: 'inter', form: 'inter-', type: 'préfixe', sens: 'entre', alias: ['au milieu de', 'parmi'], origine: 'latin', famille: 'espace et lieu', exemples: ['international', 'interrompre', 'intervalle', 'interligne'] },
+  { code: 'intra', form: 'intra-', type: 'préfixe', sens: "à l'intérieur", alias: ['dedans', 'intérieur'], origine: 'latin', famille: 'espace et lieu', exemples: ['intraveineuse', 'intramusculaire', 'intranet'] },
+  { code: 'jur', form: 'jur-, jus-', type: 'radical', sens: 'justice', alias: ['droit', 'loi', 'serment'], origine: 'latin', famille: 'humain et société', exemples: ['juridique', 'jury', 'justice', 'jurisprudence'] },
+  { code: 'lact', form: 'lact-', type: 'radical', sens: 'lait', origine: 'latin', famille: 'nature', exemples: ['lactose', 'lacté', 'lactation', 'allaiter'] },
+  { code: 'lapid', form: 'lapid-', type: 'radical', sens: 'pierre', origine: 'latin', famille: 'nature', exemples: ['lapidaire', 'lapider', 'dilapider'] },
+  { code: 'later', form: 'latér-', type: 'radical', sens: 'côté', origine: 'latin', famille: 'espace et lieu', exemples: ['latéral', 'bilatéral', 'unilatéral', 'collatéral'] },
+  { code: 'liber', form: 'liber-', type: 'radical', sens: 'libre', alias: ['liberté'], origine: 'latin', famille: 'humain et société', exemples: ['libérer', 'libertaire', 'libéral', 'délivrer'] },
+  { code: 'lingu', form: 'lingu-', type: 'radical', sens: 'langue', origine: 'latin', famille: 'parole et écriture', exemples: ['linguistique', 'bilingue', 'lingual'] },
+  { code: 'loc', form: 'loc-', type: 'radical', sens: 'lieu', alias: ['endroit', 'place'], origine: 'latin', famille: 'espace et lieu', exemples: ['local', 'localiser', 'dislocation', 'allocation'] },
+  { code: 'long', form: 'long-', type: 'radical', sens: 'long', alias: ['longueur', 'allonger'], origine: 'latin', famille: 'taille', exemples: ['longitude', 'allonger', 'prolonger', 'oblong'] },
+  { code: 'loqu', form: 'loqu-, locut-', type: 'radical', sens: 'parler', alias: ['parole', 'discours'], origine: 'latin', famille: 'parole et écriture', exemples: ['éloquent', 'interlocuteur', 'soliloque', 'loquace'] },
+  { code: 'luc', form: 'luc-, lumin-', type: 'radical', sens: 'lumière', alias: ['clarté', 'briller'], origine: 'latin', famille: 'ciel et lumière', exemples: ['lucide', 'élucider', 'luminaire', 'translucide'] },
+  { code: 'lun', form: 'lun-', type: 'radical', sens: 'lune', origine: 'latin', famille: 'ciel et lumière', exemples: ['lunaire', 'lunatique', 'alunir', 'demi-lune'] },
+  { code: 'magn', form: 'magn-', type: 'radical', sens: 'grand', alias: ['grandeur'], origine: 'latin', famille: 'taille', exemples: ['magnifique', 'magnitude', 'magnanime', 'magnat'] },
+  { code: 'mal', form: 'mal-, malé-', type: 'préfixe', sens: 'mauvais', alias: ['mal', 'méchant'], origine: 'latin', famille: 'qualité', exemples: ['malveillant', 'malfaiteur', 'malformation', 'malédiction'] },
+  { code: 'man', form: 'man-, manu-', type: 'radical', sens: 'main', origine: 'latin', famille: 'corps', exemples: ['manuel', 'manuscrit', 'manipuler', 'manœuvre'] },
+  { code: 'mar', form: 'mar-', type: 'radical', sens: 'mer', origine: 'latin', famille: 'nature', exemples: ['maritime', 'marin', 'sous-marin', 'marée'] },
+  { code: 'mater', form: 'mater-, matr-', type: 'radical', sens: 'mère', origine: 'latin', famille: 'famille', exemples: ['maternel', 'matrice', 'matrimonial', 'matriarcat'] },
+  { code: 'medi', form: 'médi-', type: 'radical', sens: 'milieu', alias: ['moyen', 'médian'], origine: 'latin', famille: 'espace et lieu', exemples: ['médian', 'médiéval', 'intermédiaire', 'Méditerranée'] },
+  { code: 'mens', form: 'ment-, mens-', type: 'radical', sens: 'esprit', alias: ['pensée', 'intelligence'], origine: 'latin', famille: 'pensée et croyances', exemples: ['mental', 'mentalité', 'démence', 'mention'] },
+  { code: 'mill', form: 'milli-, mille-', type: 'préfixe', sens: 'mille', origine: 'latin', famille: 'quantité', exemples: ['millénaire', 'millimètre', 'mille-pattes'] },
+  { code: 'miss', form: 'miss-, -mett-', type: 'radical', sens: 'envoyer', alias: ['envoi', 'lancer'], origine: 'latin', famille: 'action', exemples: ['mission', 'transmettre', 'émission', 'missile'] },
+  { code: 'mob', form: 'mob-, mot-', type: 'radical', sens: 'mouvement', alias: ['mouvoir', 'bouger'], origine: 'latin', famille: 'mouvement', exemples: ['mobile', 'automobile', 'motion', 'émotion'] },
+  { code: 'mort', form: 'mort-', type: 'radical', sens: 'mort', origine: 'latin', famille: 'vie et mort', exemples: ['mortel', 'mortalité', 'immortel', 'mortuaire'] },
+  { code: 'multi', form: 'multi-', type: 'préfixe', sens: 'plusieurs', alias: ['nombreux', 'multiple', 'beaucoup'], origine: 'latin', famille: 'quantité', exemples: ['multiple', 'multitude', 'multicolore', 'multinational'] },
+  { code: 'nat', form: 'nat-, naiss-', type: 'radical', sens: 'naître', alias: ['naissance', 'né'], origine: 'latin', famille: 'vie et mort', exemples: ['natal', 'néonatal', 'nativité', 'naissance'] },
+  { code: 'nav', form: 'nav-', type: 'radical', sens: 'navire', alias: ['bateau', 'naviguer'], origine: 'latin', famille: 'mouvement', exemples: ['naval', 'navigation', 'naufrage', 'navette'] },
+  { code: 'noct', form: 'noct-', type: 'radical', sens: 'nuit', origine: 'latin', famille: 'temps', exemples: ['nocturne', 'noctambule', 'équinoxe'] },
+  { code: 'nomin', form: 'nomin-, nom-', type: 'radical', sens: 'nom', origine: 'latin', famille: 'parole et écriture', exemples: ['nominal', 'nommer', 'dénomination', 'pronom'] },
+  { code: 'nov', form: 'nov-', type: 'radical', sens: 'nouveau', alias: ['neuf', 'renouveler'], origine: 'latin', famille: 'temps', exemples: ['novateur', 'innover', 'rénover', 'nouveauté'] },
+  { code: 'numer', form: 'numér-', type: 'radical', sens: 'nombre', alias: ['compter', 'nombrer'], origine: 'latin', famille: 'quantité', exemples: ['numéral', 'numérique', 'énumérer', 'numéro'] },
+  { code: 'ocul', form: 'ocul-', type: 'radical', sens: 'œil', origine: 'latin', famille: 'corps', exemples: ['oculaire', 'oculiste', 'binoculaire', 'inoculer'] },
+  { code: 'omni', form: 'omni-', type: 'préfixe', sens: 'tout', alias: ['tous', 'entièrement'], origine: 'latin', famille: 'quantité', exemples: ['omniprésent', 'omnivore', 'omniscient', 'omnipotent'] },
+  { code: 'oss', form: 'oss-', type: 'radical', sens: 'os', origine: 'latin', famille: 'corps', exemples: ['osseux', 'ossature', 'ossuaire', 'ossements'] },
+  { code: 'ov', form: 'ov-', type: 'radical', sens: 'œuf', origine: 'latin', famille: 'vie et mort', exemples: ['ovale', 'ovaire', 'ovipare', 'ovule'] },
+  { code: 'pater', form: 'pater-, patr-', type: 'radical', sens: 'père', origine: 'latin', famille: 'famille', exemples: ['paternel', 'patrie', 'patrimoine', 'patronyme'] },
+  { code: 'pede', form: '-pède, pédi-', type: 'suffixe', sens: 'pied', origine: 'latin', famille: 'corps', exemples: ['bipède', 'quadrupède', 'pédicure', 'pédestre'], note: 'Le préfixe grec péd(o)- « enfant » s’écrit pareil : pédiatre, pédagogie.' },
+  { code: 'pen', form: 'pén-, puni-', type: 'radical', sens: 'punition', alias: ['peine', 'punir'], origine: 'latin', famille: 'humain et société', exemples: ['pénal', 'pénalité', 'impunité', 'pénitence'] },
+  { code: 'pisc', form: 'pisci-', type: 'radical', sens: 'poisson', origine: 'latin', famille: 'animaux et plantes', exemples: ['piscine', 'pisciculture', 'piscivore'] },
+  { code: 'pon', form: 'pon-, pos-', type: 'radical', sens: 'poser', alias: ['placer', 'mettre'], origine: 'latin', famille: 'action', exemples: ['position', 'composer', 'déposer', 'exposer'] },
+  { code: 'pot', form: 'pot-, puiss-', type: 'radical', sens: 'pouvoir', alias: ['puissance', 'capable'], origine: 'latin', famille: 'humain et société', exemples: ['potentiel', 'puissance', 'omnipotent', 'impotent'] },
+  { code: 'prim', form: 'prim-', type: 'radical', sens: 'premier', alias: ['primitif', 'commencement'], origine: 'latin', famille: 'temps', exemples: ['primaire', 'primitif', 'primauté', 'prime'] },
+  { code: 'quadri', form: 'quadri-, quadru-', type: 'préfixe', sens: 'quatre', origine: 'latin', famille: 'quantité', exemples: ['quadrilatère', 'quadrupède', 'quadriennal'] },
+  { code: 'rect', form: 'rect-', type: 'radical', sens: 'droit', alias: ['redresser', 'correct'], origine: 'latin', famille: 'qualité', exemples: ['rectangle', 'rectifier', 'direct', 'correct'] },
+  { code: 'ris', form: 'ris-, rid-', type: 'radical', sens: 'rire', alias: ['moquerie'], origine: 'latin', famille: 'sentiment', exemples: ['risible', 'dérision', 'ridicule', 'risée'] },
+  { code: 'sacr', form: 'sacr-', type: 'radical', sens: 'sacré', alias: ['saint', 'consacrer'], origine: 'latin', famille: 'pensée et croyances', exemples: ['sacrement', 'consacrer', 'sacrilège', 'sacerdoce'] },
+  { code: 'salu', form: 'salu-', type: 'radical', sens: 'santé', alias: ['salut', 'sain'], origine: 'latin', famille: 'santé', exemples: ['salubre', 'salutaire', 'insalubre'] },
+  { code: 'sang', form: 'sangui-', type: 'radical', sens: 'sang', origine: 'latin', famille: 'corps', exemples: ['sanguin', 'consanguin', 'sangsue', 'sanguinaire'] },
+  { code: 'scrib', form: 'scrib-, script-', type: 'radical', sens: 'écrire', alias: ['écriture'], origine: 'latin', famille: 'parole et écriture', exemples: ['manuscrit', 'inscription', 'prescrire', 'scribe'] },
+  { code: 'semi', form: 'semi-', type: 'préfixe', sens: 'demi', alias: ['moitié', 'à demi'], origine: 'latin', famille: 'quantité', exemples: ['semi-remorque', 'semi-conducteur', 'semi-automatique'] },
+  { code: 'sen', form: 'sén-', type: 'radical', sens: 'vieux', alias: ['vieillard', 'âgé', 'vieillesse'], origine: 'latin', famille: 'humain et société', exemples: ['sénile', 'sénateur', 'sénilité', 'senior'] },
+  { code: 'sol', form: 'sol-', type: 'radical', sens: 'soleil', origine: 'latin', famille: 'ciel et lumière', exemples: ['solaire', 'insolation', 'tournesol', 'parasol'], note: 'Le latin solus « seul » s’écrit pareil : solitude, soliste, isoler.' },
+  { code: 'somn', form: 'somn-', type: 'radical', sens: 'sommeil', alias: ['dormir'], origine: 'latin', famille: 'vie et mort', exemples: ['somnifère', 'insomnie', 'somnambule', 'somnoler'] },
+  { code: 'son', form: 'son-', type: 'radical', sens: 'bruit', alias: ['son', 'sonner'], origine: 'latin', famille: 'parole et écriture', exemples: ['sonore', 'résonner', 'sonnerie', 'unisson'] },
+  { code: 'spect', form: 'spect-, spec-', type: 'radical', sens: 'regarder', alias: ['observer', 'voir'], origine: 'latin', famille: 'perception', exemples: ['spectateur', 'inspecter', 'spectacle', 'perspective'] },
+  { code: 'stat', form: 'stat-, sist-', type: 'radical', sens: 'se tenir debout', alias: ['debout', 'se tenir', 'stable'], origine: 'latin', famille: 'action', exemples: ['station', 'stable', 'constant', 'résister'] },
+  { code: 'sub', form: 'sub-', type: 'préfixe', sens: 'sous', alias: ['dessous', 'en dessous'], origine: 'latin', famille: 'espace et lieu', exemples: ['submerger', 'subalterne', 'subordonné', 'subaquatique'] },
+  { code: 'super', form: 'super-, supra-', type: 'préfixe', sens: 'au-dessus', alias: ['sur', 'supérieur'], origine: 'latin', famille: 'espace et lieu', exemples: ['supérieur', 'superposer', 'suprématie', 'superstructure'] },
+  { code: 'tact', form: 'tact-, tang-', type: 'radical', sens: 'toucher', alias: ['contact'], origine: 'latin', famille: 'perception', exemples: ['tactile', 'contact', 'tangible', 'intact'] },
+  { code: 'temp', form: 'tempor-', type: 'radical', sens: 'temps', origine: 'latin', famille: 'temps', exemples: ['temporaire', 'contemporain', 'temporel', 'atemporel'] },
+  { code: 'terr', form: 'terr-', type: 'radical', sens: 'terre', origine: 'latin', famille: 'nature', exemples: ['territoire', 'terrestre', 'souterrain', 'atterrir'] },
+  { code: 'tract', form: 'tract-, trah-', type: 'radical', sens: 'tirer', alias: ['traîner'], origine: 'latin', famille: 'action', exemples: ['tracteur', 'attraction', 'extraire', 'soustraire'] },
+  { code: 'trans', form: 'trans-', type: 'préfixe', sens: 'à travers', alias: ['au-delà', 'par-delà'], origine: 'latin', famille: 'espace et lieu', exemples: ['transporter', 'transpercer', 'transatlantique', 'transfuge'] },
+  { code: 'ultra', form: 'ultra-', type: 'préfixe', sens: 'au-delà', alias: ['plus loin que', 'extrêmement'], origine: 'latin', famille: 'espace et lieu', exemples: ['ultraviolet', 'ultrason', 'ultramoderne'] },
+  { code: 'uni', form: 'uni-', type: 'préfixe', sens: 'un seul', alias: ['un', 'seul', 'unique'], origine: 'latin', famille: 'quantité', exemples: ['unique', 'unifier', 'uniforme', 'unilatéral'] },
+  { code: 'urb', form: 'urb-', type: 'radical', sens: 'ville', alias: ['cité'], origine: 'latin', famille: 'espace et lieu', exemples: ['urbain', 'urbanisme', 'suburbain', 'urbanité'] },
+  { code: 'ver', form: 'vér-', type: 'radical', sens: 'vrai', alias: ['vérité'], origine: 'latin', famille: 'qualité', exemples: ['véritable', 'vérifier', 'véracité'] },
+  { code: 'verb', form: 'verb-', type: 'radical', sens: 'mot', alias: ['verbe'], origine: 'latin', famille: 'parole et écriture', exemples: ['verbal', 'proverbe', 'verbeux', 'verbatim'] },
+  { code: 'vest', form: 'vest-', type: 'radical', sens: 'vêtement', alias: ['habit', 'vêtir'], origine: 'latin', famille: 'humain et société', exemples: ['vestimentaire', 'travesti', 'vestiaire', 'investir'] },
+  { code: 'vid', form: 'vid-, vis-', type: 'radical', sens: 'voir', alias: ['vue', 'vision'], origine: 'latin', famille: 'perception', exemples: ['vision', 'visible', 'évident', 'télévision'] },
+  { code: 'viti', form: 'viti-, vini-', type: 'radical', sens: 'vigne', alias: ['vin'], origine: 'latin', famille: 'animaux et plantes', exemples: ['viticulture', 'vinicole', 'vignoble'] },
+  { code: 'viv', form: 'viv-, vit-', type: 'radical', sens: 'vie', alias: ['vivre', 'vivant'], origine: 'latin', famille: 'vie et mort', exemples: ['vivant', 'survivre', 'vital', 'vivace'] },
+  { code: 'voc', form: 'voc-, voqu-', type: 'radical', sens: 'voix', alias: ['appeler'], origine: 'latin', famille: 'parole et écriture', exemples: ['vocal', 'invoquer', 'convoquer', 'vocifération'] },
+  { code: 'vore', form: '-vore', type: 'suffixe', sens: 'manger', alias: ['dévorer', 'qui mange'], origine: 'latin', famille: 'action', exemples: ['carnivore', 'herbivore', 'omnivore', 'vorace'] },
+];
+
+export const BY_CODE = new Map(ROOTS.map((root) => [root.code, root]));
+
+export const ORIGINS = ['grec', 'latin'];
+
+/** Toutes les réponses acceptées pour un champ donné ('sens'). */
+export function accepted(root, field) {
+  if (field !== 'sens') return [root[field]];
+  return [root.sens, ...(root.alias ?? [])];
+}
+
+/**
+ * Le doublet d'une racine : celle de l'autre langue qui dit la même chose —
+ * hydro-/aqua-, poly-/multi-, mono-/uni-, nécro-/mort-.
+ *
+ * Rien n'est déclaré dans les données : deux racines sont doublets quand elles
+ * ont le même sens principal et deux origines différentes. C'est exactement la
+ * définition, et cela évite une liste à tenir à jour en double.
+ *
+ * @param {object} root
+ * @returns {object|undefined}
+ */
+export function doublet(root) {
+  return ROOTS.find(
+    (other) => other.origine !== root.origine && other.sens === root.sens,
+  );
+}

@@ -45,6 +45,15 @@ export const THEMES = [
       "À partir du code à deux lettres : le nom de l'État, sa capitale et sa position sur la carte.",
     storage: { key: 'ashquiz.etats-unis.v1', statsKey: 'states' },
   },
+  {
+    id: 'racines',
+    name: 'Racines grecques & latines',
+    icon: '🏛️',
+    href: 'racines.html',
+    short: 'Racines',
+    prompt: "À partir d'une racine : son sens en français et son origine, grecque ou latine.",
+    storage: { key: 'ashquiz.racines.v1', statsKey: 'roots' },
+  },
 ];
 
 export const THEMES_BY_ID = new Map(THEMES.map((theme) => [theme.id, theme]));
