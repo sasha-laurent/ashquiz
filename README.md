@@ -3,13 +3,15 @@
 Petits quiz de révision quotidiens. La page d'accueil (`index.html`) est un menu : un bloc par
 thème, avec son quiz du jour et son entraînement libre.
 
-Quatre thèmes pour l'instant :
+Cinq thèmes pour l'instant :
 
 - **Départements et préfectures français** (`departements.html`) ;
 - **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle ;
 - **Drapeaux et capitales** (`pays.html`) : reconnaître un pays à son drapeau et donner sa capitale ;
 - **États américains** (`etats-unis.html`) : à partir du code à deux lettres, le nom de l'État, sa
-  capitale et sa position sur la carte.
+  capitale et sa position sur la carte ;
+- **Racines grecques et latines** (`racines.html`) : à partir d'une racine, d'un préfixe ou d'un
+  suffixe, son sens en français et son origine.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
 consécutifs. On y répond au clavier, avec la possibilité de passer une question donnée en **mode
@@ -172,6 +174,14 @@ Delaware, la Floride, le Kansas…), et un carré à deux cases n'apprendrait ri
 (déclarée dans `src/data/states.js`, et qui ne sert qu'à ça) complète alors le lot par des voisins,
 faute de voisins de code.
 
+**Racines** — seul le **sens** se joue au carré : l'origine n'a que deux valeurs, et un carré à deux
+cases n'est pas un carré — elle garde ses deux boutons, et ce qui y était coché le reste. Les quatre
+sens proposés sont ceux de racines du **même champ sémantique** (`famille`, dans
+`src/data/roots.js`, qui ne sert qu'à ça) : « poly- » se choisit entre *plusieurs*, *un seul*,
+*demi* et *égal* — quatre façons de dire une quantité, donc une vraie question. Entre *plusieurs*,
+*pierre*, *cheval* et *écrire*, il n'y aurait qu'un tri par thème, et la bonne case sauterait aux
+yeux sans rien apprendre.
+
 **Tableaux** (titre, peintre, siècle) — quatre propositions quelconques prises dans le corpus,
 tirées indépendamment pour chaque sous-réponse : un nom de peintre appartient à toutes ses œuvres,
 et deux tableaux proposés ensemble pourraient être du même — ce qui ferait deux cases justes. Les
@@ -305,9 +315,75 @@ plus grande ville : Albany et non New York, Sacramento et non Los Angeles, Olymp
 c'est d'ailleurs là que le thème se joue. Le garde-fou habituel s'applique : « Dover », capitale du
 Delaware, n'est jamais acceptée pour Denver, dont elle n'est qu'à une lettre.
 
+## Racines grecques et latines
+
+Cinq racines par jour. Pour chacune, on part de la racine, du préfixe ou du suffixe — le tiret dit
+lequel : `poly-`, `-logie`, `chrono-` — et il faut donner :
+
+1. son **sens** en français,
+2. son **origine**, en cliquant l'un des deux boutons : grec ou latin.
+
+Deux sous-réponses, donc **2 points par question et 10 points par jour**, comme les drapeaux.
+
+Le corpus (`src/data/roots.js`) compte 251 entrées, **équilibrées entre les deux origines** — 125
+grecques, 126 latines. Ce n'est pas cosmétique : l'origine est une sous-réponse à deux valeurs, et
+un corpus penchant d'un côté ferait payer « répondre toujours grec » sans rien mesurer. Un test le
+vérifie.
+
+### Le sens : plusieurs formulations acceptées
+
+Une racine se traduit rarement par un mot et un seul. Chaque entrée déclare donc sa réponse
+principale et ses variantes (`alias`) : `anthropo-` accepte *homme*, *être humain* et *humain*,
+`-crate` accepte *pouvoir*, *puissance* et *gouvernement*. La première s'affiche à la correction, les
+autres sont signalées entre parenthèses.
+
+La correction réutilise `src/lib/text.js`. Un point à connaître : la tolérance aux fautes de frappe
+est **nulle en dessous de cinq lettres**, et beaucoup de sens sont courts — *eau*, *feu*, *vie*,
+*mer* s'écrivent exactement ou pas du tout. En contrepartie, le garde-fou habituel joue à plein :
+« droite » (dextr-) ne passe jamais pour « droit » (rect-, ortho-), ni l'inverse. Le test le vérifie
+sur les 62 750 paires du corpus.
+
+### Doublets et faux amis
+
+C'est là que le thème se joue. Deux racines qui disent la même chose, une par langue, forment un
+**doublet** : hydro-/aqua-, poly-/multi-, mono-/uni-, nécro-/mort-, ortho-/rect-. Rien n'est déclaré
+dans les données — `doublet()` les déduit du corpus (même sens principal, origines différentes), ce
+qui évite une liste à tenir à jour en double. Il s'affiche à la correction : « Doublet grec :
+hélio- (héliocentrique) ».
+
+Deux racines de même sens ne tombent jamais le même jour (`distinctBy` sur le sens) : sinon la même
+réponse serait à taper deux fois.
+
+Quand une **autre** racine s'écrit pareil sans rien avoir à voir, l'entrée porte une `note`, affichée
+elle aussi à la correction :
+
+- le grec péd(o)- « enfant » (pédiatre, pédagogie) et le latin *pes, pedis* « pied » (pédale,
+  bipède) ;
+- le latin *sol* « soleil » (solaire, tournesol) et *solus* « seul » (solitude, isoler) ;
+- le grec homo- « semblable » (homonyme) et le latin *homo* « homme » (homicide) ;
+- le latin *aequus* « égal » (équilibre) et *equus* « cheval » (équitation) ;
+- le para- grec « à côté de » (parallèle, parasite) et celui de parapluie, venu de l'italien
+  *parare* « protéger ».
+
+Ces racines-là sont dans le corpus sous une graphie qui lève l'ambiguïté — le préfixe `péd-, pédo-`
+d'un côté, le suffixe `-pède, pédi-` de l'autre — de sorte qu'une question a toujours une réponse et
+une seule.
+
+### Le second coup de pouce
+
+À côté de « Passer au carré », le thème ajoute **« Voir un exemple »** : un mot français bâti sur la
+racine. Il obéit aux mêmes règles que le carré — il ne vaut que pour la question en cours, il ne
+change rien à la note, et une fois demandé le bouton disparaît jusqu'à la question suivante. Un seul
+exemple, pas la liste : c'est un indice, pas la correction. Tous s'affichent de toute façon une fois
+la réponse validée.
+
+C'est le pendant du carré pour ce thème : le carré aide à *reconnaître* un sens, l'exemple aide à le
+*retrouver* — « télé-, comme dans télévision » suffit souvent à débloquer une racine qu'on connaît
+sans savoir la nommer.
+
 ## Ajouter un thème plus tard
 
-Les quatre thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
+Les cinq thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
 caractéristiques » — et ce déroulé n'est écrit qu'une fois. Un thème ne décrit que ce qui lui est
 propre ; les deux briques communes s'occupent du reste :
 
@@ -344,7 +420,7 @@ le même jour — mais **le changer une fois le thème en ligne rebattrait les c
 monde**.
 
 Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays,
-États américains) :
+États américains, racines) :
 un module JS importé normalement, modifiable à la main, et les outils de `tools/` ne servent qu'aux
 images. Corpus ouvert et régénérable (tableaux) : un fichier de `data/` produit par un outil et
 chargé en JSON à l'exécution, ce qui impose un écran de chargement et un écran d'erreur — le thème

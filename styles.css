@@ -238,6 +238,7 @@ main {
 }
 
 .century,
+.origin,
 .choice {
   padding: 8px 14px;
   border-radius: 10px;
@@ -250,16 +251,19 @@ main {
 }
 
 .century:hover:not(:disabled),
+.origin:hover:not(:disabled),
 .choice:hover:not(:disabled) {
   border-color: var(--accent);
 }
 
 .century:disabled,
+.origin:disabled,
 .choice:disabled {
   cursor: default;
 }
 
 .century.is-picked,
+.origin.is-picked,
 .choice.is-picked {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
@@ -267,6 +271,7 @@ main {
 }
 
 .century.is-ok,
+.origin.is-ok,
 .choice.is-ok {
   border-color: var(--ok);
   background: color-mix(in srgb, var(--ok) 22%, transparent);
@@ -275,6 +280,7 @@ main {
 }
 
 .century.is-ko,
+.origin.is-ko,
 .choice.is-ko {
   border-color: var(--ko);
   background: color-mix(in srgb, var(--ko) 18%, transparent);
@@ -293,6 +299,49 @@ main {
 
 .map-instruction {
   margin: 18px 0 4px;
+}
+
+/* Quiz des racines : l'origine ne se joue qu'entre deux valeurs — deux boutons
+   côte à côte, pas la grille à quatre cases du mode carré. */
+.origins {
+  display: flex;
+  gap: 8px;
+}
+
+.origin {
+  flex: 1;
+}
+
+/* L'énoncé du thème des racines : le type en surtitre, la racine en gros. */
+.q-type {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Le décalage de `.q-code` sert à l'écarter du texte qui le précède
+   (« Département n° 45 ») ; ici le surtitre est au-dessus, pas à gauche. */
+.q-type + .q-code {
+  margin-left: 0;
+}
+
+/* Le thème des racines n'a rien à montrer à côté du formulaire — ni carte, ni
+   image : une seule colonne, et un champ qui ne s'étire pas sur toute la carte. */
+.root-fields {
+  max-width: 420px;
+}
+
+.root-hint {
+  margin-top: 18px;
+}
+
+.root-detail {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .hint {

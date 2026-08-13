@@ -3,30 +3,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ashquiz — drapeaux</title>
+    <title>Ashquiz — racines grecques et latines</title>
     <meta
       name="description"
-      content="Cinq drapeaux par jour : retrouver le nom du pays et sa capitale."
+      content="Cinq racines par jour : retrouver le sens en français et l'origine, grecque ou latine."
     />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>"
     />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
         <span class="brand-name">Ashquiz</span>
-        <span class="brand-theme">Drapeaux</span>
+        <span class="brand-theme">Racines</span>
       </div>
       <nav class="themes" aria-label="Thèmes">
         <a href="index.html">Accueil</a>
         <a href="departements.html">Départements</a>
         <a href="tableaux.html">Tableaux</a>
-        <a href="pays.html" aria-current="page">Pays</a>
+        <a href="pays.html">Pays</a>
         <a href="etats-unis.html">États-Unis</a>
-        <a href="racines.html">Racines</a>
+        <a href="racines.html" aria-current="page">Racines</a>
       </nav>
       <div class="topbar-meta">
         <span id="today-label" class="today"></span>
@@ -42,31 +42,30 @@
         </div>
 
         <form id="answer-form" class="card" autocomplete="off">
-          <p class="prompt">Quel est ce pays ?</p>
+          <p class="prompt">
+            <span id="q-type" class="q-type">Préfixe</span>
+            <strong id="q-root" class="q-code">—</strong>
+          </p>
 
-          <div class="columns">
-            <div class="fields">
-              <label class="field">
-                <span class="field-label">Pays</span>
-                <input id="in-name" type="text" spellcheck="false" enterkeyhint="next" />
-              </label>
+          <div class="fields root-fields">
+            <label class="field">
+              <span class="field-label">Sens en français</span>
+              <input id="in-sens" type="text" spellcheck="false" enterkeyhint="done" />
+            </label>
 
-              <label class="field">
-                <span class="field-label">Capitale</span>
-                <input id="in-capital" type="text" spellcheck="false" enterkeyhint="done" />
-              </label>
-
+            <p class="field-label map-instruction" id="origins-label">Origine</p>
+            <div id="origins" class="origins" role="radiogroup" aria-labelledby="origins-label">
+              <button type="button" class="origin" data-origine="grec" role="radio" aria-checked="false">
+                Grec
+              </button>
+              <button type="button" class="origin" data-origine="latin" role="radio" aria-checked="false">
+                Latin
+              </button>
             </div>
-
-            <figure id="flag" class="flag">
-              <img id="flag-image" alt="Drapeau à identifier" />
-              <p class="flag-fallback">
-                Le drapeau n'a pas pu être chargé.<br />
-                Les images sont écrites par <code>npm run build:flags</code>.
-              </p>
-              <figcaption id="flag-caption" class="flag-caption muted"></figcaption>
-            </figure>
           </div>
+
+          <p id="example" class="hint root-hint"></p>
+          <p id="root-detail" class="root-detail muted"></p>
 
           <div id="feedback" class="feedback" hidden></div>
 
@@ -77,9 +76,17 @@
               id="btn-carre"
               type="button"
               class="btn"
-              title="Quatre propositions par sous-réponse, pour cette question seulement"
+              title="Quatre propositions pour le sens, pour cette question seulement"
             >
               Passer au carré
+            </button>
+            <button
+              id="btn-exemple"
+              type="button"
+              class="btn"
+              title="Un mot français bâti sur cette racine, pour cette question seulement"
+            >
+              Voir un exemple
             </button>
           </div>
         </form>
@@ -105,9 +112,9 @@
     </main>
 
     <footer class="footer">
-      <span>Drapeaux : Wikimedia Commons — liste des États membres de l'ONU.</span>
+      <span>Racines, préfixes et suffixes du français savant — corpus équilibré entre grec et latin.</span>
     </footer>
 
-    <script type="module" src="src/app-countries.js"></script>
+    <script type="module" src="src/app-roots.js"></script>
   </body>
 </html>
