@@ -6,6 +6,7 @@ import { dateKey, humanDate } from './lib/date.js';
 import { practiceUrl } from './lib/mode.js';
 import { streak } from './lib/storage.js';
 import { THEMES, createThemeStore } from './lib/themes.js';
+import { setupThemeNav } from './ui/theme-nav.js';
 
 const today = dateKey();
 
@@ -101,6 +102,7 @@ function mark(className, symbol, label) {
 }
 
 async function main() {
+  setupThemeNav();
   document.getElementById('today-label').textContent = humanDate(today);
 
   const list = document.getElementById('theme-list');

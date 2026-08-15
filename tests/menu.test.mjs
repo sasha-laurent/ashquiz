@@ -59,3 +59,24 @@ test('le menu pointe vers des pages qui existent et savent démarrer un entraîn
     assert.ok(menu.includes(theme.href), `${theme.href} absent du menu sans JavaScript`);
   }
 });
+
+test("la barre des thèmes tient dans un écran de téléphone", async () => {
+  // Six pastilles font plus large qu'un téléphone. Le bouton qui les replie est
+  // posé par `src/ui/theme-nav.js` sur la barre de l'en-tête : chaque page doit
+  // donc porter cette barre, et les deux points d'entrée appeler le module.
+  const pages = ['index.html', ...THEMES.map((theme) => theme.href)];
+  for (const href of pages) {
+    const page = await readFile(resolve(ROOT, href), 'utf8');
+    assert.match(page, /<nav class="themes"/, `${href} sans barre des thèmes`);
+  }
+
+  for (const entry of ['src/ui/quiz-app.js', 'src/app-menu.js']) {
+    const source = await readFile(resolve(ROOT, entry), 'utf8');
+    assert.match(source, /setupThemeNav\(\)/, `${entry} n'installe pas le menu des thèmes`);
+  }
+
+  // Sans JavaScript le bouton n'existe pas : la barre doit alors passer à la
+  // ligne, sinon la page défile horizontalement.
+  const styles = await readFile(resolve(ROOT, 'styles.css'), 'utf8');
+  assert.match(styles, /\.themes \{[^}]*flex-wrap: wrap/, '.themes sans retour à la ligne');
+});
