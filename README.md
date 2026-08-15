@@ -381,6 +381,19 @@ C'est le pendant du carré pour ce thème : le carré aide à *reconnaître* un 
 *retrouver* — « télé-, comme dans télévision » suffit souvent à débloquer une racine qu'on connaît
 sans savoir la nommer.
 
+## Sur téléphone
+
+Les six pastilles de l'en-tête — l'accueil et les cinq thèmes — font près de 550 px : sur un
+téléphone elles sortaient de l'écran, et toute la page se mettait à défiler horizontalement. En
+dessous de 720 px de large, elles se replient donc derrière un bouton, et se déplient en panneau
+sous l'en-tête ; il se referme à la touche Échap ou au premier clic à côté.
+
+Ce bouton est posé par `src/ui/theme-nav.js`, pas écrit dans les six pages : c'est un affordance de
+JavaScript, et une duplication de moins entre les pages. Sans JavaScript, il n'apparaît pas et la
+barre reste affichée telle quelle — `.themes` passe à la ligne dans `styles.css`, ce qui coûte une
+rangée dans l'en-tête mais ne déborde jamais. Les pages n'ont donc rien à porter d'autre que leur
+`<nav class="themes">` habituel.
+
 ## Ajouter un thème plus tard
 
 Les cinq thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
@@ -409,8 +422,9 @@ Concrètement, pour un thème de plus :
    `accepted` qui dit les réponses valables, éventuellement un `choiceFields` pour ce qui se
    répond au clic (la carte, le siècle), et un `choices` pour le mode carré ;
 3. **`<thème>.html`** — le squelette d'une page existante, en gardant les identifiants attendus
-   (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) ; `btn-carre` est
-   facultatif, une page qui ne le porte pas se joue seulement au clavier ;
+   (`progress`, `answer-form`, `feedback`, `btn-validate`, `screen-summary`…) et la barre
+   `<nav class="themes">` de l'en-tête, à laquelle se raccroche le menu des écrans étroits ;
+   `btn-carre` est facultatif, une page qui ne le porte pas se joue seulement au clavier ;
 4. **`src/app-<thème>.js`** — l'appel à `startQuizApp` ;
 5. **une entrée dans `THEMES`** (`src/lib/themes.js`).
 
