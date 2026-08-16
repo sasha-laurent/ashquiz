@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { THEMES } from '../src/lib/themes.js';
 import { hasVirtualKeyboard } from '../src/ui/keyboard.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,11 +31,30 @@ test('sans matchMedia, le focus automatique reste en place', () => {
 
 test("le premier champ ne prend pas le focus quand il appellerait le clavier", async () => {
   // Le focus est donné en un seul endroit, à chaque nouvelle question
-  // (`renderQuestion`) : c'est là que la condition doit se lire.
+  // (`renderQuestion` → `focusQuestion`) : c'est là que la condition doit se lire.
   const source = await readFile(resolve(ROOT, 'src/ui/quiz-app.js'), 'utf8');
   assert.match(
     source,
-    /!hasVirtualKeyboard\(\)\) el\(inputIds\[0\]\)\.focus\(\)/,
+    /!hasVirtualKeyboard\(\)\) return el\(inputIds\[0\]\)\.focus\(\)/,
     'quiz-app.js donne le focus au premier champ sans consulter le clavier virtuel',
   );
+});
+
+test("l'énoncé prend le focus à la place du champ", async () => {
+  // À défaut, le focus retomberait sur `<body>` — le bouton « Question
+  // suivante » venant de disparaître — et un lecteur d'écran n'annoncerait pas
+  // la nouvelle question. Chaque page doit donc porter l'énoncé que vise
+  // `focusQuestion()`.
+  const source = await readFile(resolve(ROOT, 'src/ui/quiz-app.js'), 'utf8');
+  assert.match(source, /querySelector\('\.prompt'\)/);
+  assert.match(source, /prompt\.tabIndex = -1/, "l'énoncé n'est pas rendu focalisable");
+
+  for (const theme of THEMES) {
+    const page = await readFile(resolve(ROOT, theme.href), 'utf8');
+    assert.match(page, /<p class="prompt"/, `${theme.href} sans énoncé à viser`);
+  }
+
+  // Un énoncé focalisé n'est pas un contrôle : pas de cadre de mise au point.
+  const styles = await readFile(resolve(ROOT, 'styles.css'), 'utf8');
+  assert.match(styles, /\.prompt:focus \{[^}]*outline: none/);
 });

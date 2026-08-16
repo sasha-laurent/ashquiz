@@ -333,10 +333,31 @@ export function startQuizApp(spec) {
     ask(item, ctx);
 
     renderProgress();
-    // Sauf là où il ferait surgir le clavier par-dessus l'énoncé : sur un
-    // appareil tactile, on laisse lire la question, le champ s'obtient d'une
-    // tape.
-    if (inputIds.length && !hasVirtualKeyboard()) el(inputIds[0]).focus();
+    focusQuestion();
+  }
+
+  /**
+   * Où poser le focus quand la question change.
+   *
+   * Au pointeur fin, le premier champ : on lit, on tape. Sur un appareil
+   * tactile, ce même focus appellerait le clavier virtuel par-dessus l'énoncé
+   * (voir `keyboard.js`) — c'est alors l'énoncé qui le prend. Le champ s'obtient
+   * d'une tape, et le focus a de toute façon un second rôle : le bouton
+   * « Question suivante » vient de disparaître, et sans cela le focus retomberait
+   * sur `<body>`. Un lecteur d'écran repart donc du début de la nouvelle
+   * question, et la page défile jusqu'à elle plutôt que de rester au bas du
+   * formulaire.
+   */
+  function focusQuestion() {
+    if (inputIds.length && !hasVirtualKeyboard()) return el(inputIds[0]).focus();
+
+    const prompt = el('answer-form').querySelector('.prompt');
+    if (!prompt) return;
+    // Un énoncé n'est pas un contrôle : il se vise, mais n'entre pas dans
+    // l'ordre de tabulation. Posé ici et non dans les cinq pages — sans
+    // JavaScript, il n'y aurait rien à viser.
+    prompt.tabIndex = -1;
+    prompt.focus();
   }
 
   /** Après le passage au carré, il n'y a plus rien à saisir : on va cocher. */
