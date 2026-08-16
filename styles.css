@@ -169,6 +169,13 @@ main {
   color: var(--muted);
 }
 
+/* L'énoncé reçoit le focus à chaque question quand le champ ne le prend pas
+   (`src/ui/quiz-app.js`) : c'est un repère pour les lecteurs d'écran, pas un
+   contrôle, et le cadre de mise au point n'aurait rien à y désigner. */
+.prompt:focus {
+  outline: none;
+}
+
 .q-code {
   display: inline-block;
   min-width: 2.4em;

@@ -394,6 +394,27 @@ barre reste affichée telle quelle — `.themes` passe à la ligne dans `styles.
 rangée dans l'en-tête mais ne déborde jamais. Les pages n'ont donc rien à porter d'autre que leur
 `<nav class="themes">` habituel.
 
+Chaque nouvelle question donne aussi le focus au premier champ, pour qu'on puisse taper sans viser :
+sur un téléphone, cela appelait le clavier virtuel, qui couvre la moitié basse de l'écran. Le
+tableau, le drapeau ou la carte se retrouvaient poussés hors de vue, et il fallait refermer le
+clavier pour lire la question qu'on venait de recevoir. Sur un appareil tactile, c'est donc l'énoncé
+qui prend le focus : on lit la question, puis on tape dans le champ, ce qui appelle le clavier au
+moment voulu.
+
+L'énoncé plutôt que rien, car le focus a un second rôle : le bouton « Question suivante » vient de
+disparaître, et à défaut le focus retomberait sur `<body>` — un lecteur d'écran n'annoncerait pas la
+question suivante, et la page resterait au bas du formulaire. `focusQuestion()`
+(`src/ui/quiz-app.js`) vise donc le `<p class="prompt">` de la page, qu'il rend focalisable au
+passage : `tabindex="-1"` se vise sans entrer dans l'ordre de tabulation. Comme le bouton des
+thèmes, il est posé en JavaScript et non écrit dans les cinq pages — sans JavaScript, il n'y aurait
+rien à viser. Un énoncé n'étant pas un contrôle, `styles.css` lui retire le cadre de mise au point.
+
+Le partage se fait sur `(pointer: coarse)` (`src/ui/keyboard.js`) et non sur la largeur : c'est
+l'appareil tactile qui affiche un clavier à l'écran, tablette de 1024 px comprise, quand une fenêtre
+de bureau rétrécie à 390 px n'en affiche pas. Le seuil de 720 px de l'en-tête répond à une autre
+question — l'encombrement — et se tromperait des deux côtés. Le reste du parcours au clavier ne
+bouge pas : Entrée enchaîne les champs, et la correction met le focus sur « Question suivante ».
+
 ## Ajouter un thème plus tard
 
 Les cinq thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
