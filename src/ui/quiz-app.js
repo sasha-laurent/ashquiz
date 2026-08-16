@@ -13,6 +13,7 @@ import { dateKey, humanDate } from '../lib/date.js';
 import { DAILY, PRACTICE, requestedMode } from '../lib/mode.js';
 import { streak } from '../lib/storage.js';
 import { createThemeStore } from '../lib/themes.js';
+import { hasVirtualKeyboard } from './keyboard.js';
 import { setupThemeNav } from './theme-nav.js';
 
 const el = (id) => document.getElementById(id);
@@ -332,7 +333,10 @@ export function startQuizApp(spec) {
     ask(item, ctx);
 
     renderProgress();
-    if (inputIds.length) el(inputIds[0]).focus();
+    // Sauf là où il ferait surgir le clavier par-dessus l'énoncé : sur un
+    // appareil tactile, on laisse lire la question, le champ s'obtient d'une
+    // tape.
+    if (inputIds.length && !hasVirtualKeyboard()) el(inputIds[0]).focus();
   }
 
   /** Après le passage au carré, il n'y a plus rien à saisir : on va cocher. */
