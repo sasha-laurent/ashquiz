@@ -381,6 +381,26 @@ C'est le pendant du carré pour ce thème : le carré aide à *reconnaître* un 
 *retrouver* — « télé-, comme dans télévision » suffit souvent à débloquer une racine qu'on connaît
 sans savoir la nommer.
 
+## L'illustration en grand
+
+Le tableau et le drapeau partagent la place avec le formulaire : ils sont bornés à 62 % de la
+hauteur de la fenêtre, et à 46 % dès que les colonnes s'empilent. C'est assez pour reconnaître un
+drapeau, rarement pour détailler un tableau. **Un clic sur l'illustration l'affiche donc sur toute
+la page, et un second referme** — c'est le même geste qui ouvre et qui ferme, où que soit le
+pointeur : il n'y a pas de croix à viser. La touche Échap referme aussi, et le focus revient à
+l'illustration d'où l'on est parti.
+
+La légende reprise sous l'image est celle de la figure, vide tant que la réponse n'est pas donnée :
+agrandir une œuvre ne dévoile jamais son titre avant l'heure. Le nom de l'image, lui, reste son
+`alt` — « Drapeau à identifier », puis le pays une fois la correction affichée.
+
+La fenêtre est posée par `src/ui/lightbox.js`, une fois au démarrage
+(`setupLightbox()` dans `src/ui/quiz-app.js`), et les pages n'ont qu'à marquer d'un `data-zoom`
+l'image qui s'agrandit. Comme le bouton des thèmes, l'affordance est ajoutée en JavaScript et non
+écrite dans les pages : c'est là aussi que l'image devient focalisable et actionnable au clavier —
+une image ne l'est pas — et sans JavaScript, rien ne s'annonce cliquable puisque rien ne s'ouvrirait.
+Les thèmes sans illustration ne marquent rien, et ne reçoivent pas de fenêtre.
+
 ## Sur téléphone
 
 Les six pastilles de l'en-tête — l'accueil et les cinq thèmes — font près de 550 px : sur un

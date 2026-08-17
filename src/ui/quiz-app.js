@@ -14,6 +14,7 @@ import { DAILY, PRACTICE, requestedMode } from '../lib/mode.js';
 import { streak } from '../lib/storage.js';
 import { createThemeStore } from '../lib/themes.js';
 import { hasVirtualKeyboard } from './keyboard.js';
+import { setupLightbox } from './lightbox.js';
 import { setupThemeNav } from './theme-nav.js';
 
 const el = (id) => document.getElementById(id);
@@ -75,6 +76,10 @@ export function startQuizApp(spec) {
   // Avant tout le reste : l'en-tête doit rester navigable même si le thème ne
   // parvient pas à charger sa carte ou son corpus.
   setupThemeNav();
+  // De même pour l'agrandissement : il ne dépend que du HTML de la page, pas du
+  // corpus. Les thèmes sans illustration n'ont rien à marquer, et rien ne se
+  // pose alors.
+  setupLightbox();
 
   const store = createThemeStore(theme);
   const today = dateKey();

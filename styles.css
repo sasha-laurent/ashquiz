@@ -1013,3 +1013,85 @@ a.btn {
 .flag.is-broken .flag-fallback {
   display: block;
 }
+
+/* --- L'illustration en grand ----------------------------------------------- */
+
+/* La classe est posée par `src/ui/lightbox.js` : sans JavaScript, rien
+   n'annonce une image comme cliquable puisque le clic n'ouvrirait rien. */
+.zoomable {
+  cursor: zoom-in;
+}
+
+.zoomable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  /* Au-dessus du panneau des thèmes (z-index: 20), seul autre calque de la
+     page. */
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  /* Toujours sombre, dans les deux thèmes : la page s'efface derrière
+     l'illustration. */
+  background: rgb(6 9 16 / 90%);
+  cursor: zoom-out;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  /* Ce qui reste une fois la légende et les marges posées. */
+  max-height: calc(100vh - 130px);
+  object-fit: contain;
+  border-radius: 10px;
+  /* Le fond clair des drapeaux (voir `.flag img`) : sans lui, ceux à dominante
+     blanche se perdraient dans la page assombrie. Sous un tableau, il ne se voit
+     que comme un passe-partout. */
+  padding: 10px;
+  background: #e7eaf1;
+}
+
+.lightbox-caption {
+  margin: 0;
+  max-width: 60ch;
+  text-align: center;
+  font-size: 14px;
+  /* Sur le fond sombre de la fenêtre, pas sur celui de la page. */
+  color: #cfd7e6;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: rgb(23 30 46 / 80%);
+  color: #e8ecf5;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* La page ne défile plus derrière la fenêtre : sur un téléphone, on referme
+   d'un appui, et un glissement ne doit pas emmener le quiz ailleurs. */
+body.has-lightbox {
+  overflow: hidden;
+}
