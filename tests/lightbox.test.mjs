@@ -246,7 +246,7 @@ test("les deux pages illustrées marquent ce qui s'agrandit", async () => {
     );
   }
 
-  // La fenêtre est posée au démarrage, une fois pour les cinq thèmes ; les pages
+  // La fenêtre est posée au démarrage, une fois pour les six thèmes ; les pages
   // sans `data-zoom` n'en reçoivent pas.
   const app = await readFile(resolve(ROOT, 'src/ui/quiz-app.js'), 'utf8');
   assert.match(app, /setupLightbox\(\)/);

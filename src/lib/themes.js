@@ -54,6 +54,15 @@ export const THEMES = [
     prompt: "À partir d'une racine : son sens en français et son origine, grecque ou latine.",
     storage: { key: 'ashquiz.racines.v1', statsKey: 'roots' },
   },
+  {
+    id: 'plantes',
+    name: 'Plantes, fleurs & arbres',
+    icon: '🌿',
+    href: 'plantes.html',
+    short: 'Plantes',
+    prompt: 'À partir de la photo : le nom français de la plante et sa famille botanique.',
+    storage: { key: 'ashquiz.plantes.v1', statsKey: 'plants' },
+  },
 ];
 
 export const THEMES_BY_ID = new Map(THEMES.map((theme) => [theme.id, theme]));

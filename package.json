@@ -10,6 +10,7 @@
     "build:paintings": "node tools/build-paintings.mjs",
     "build:flags": "node tools/build-flags.mjs",
     "build:states": "node tools/build-states.mjs",
+    "build:plants": "node tools/build-plants.mjs",
     "test": "node --test \"tests/*.test.mjs\""
   },
   "license": "MIT"

@@ -1,13 +1,13 @@
 // Écran de quiz commun aux thèmes.
 //
-// Les trois pages de quiz ont le même squelette HTML (une barre de progression,
+// Les six pages de quiz ont le même squelette HTML (une barre de progression,
 // un formulaire, un écran de résultat) et le même déroulé : série du jour ou
 // entraînement libre, une question à la fois, correction affichée, résultat
 // enregistré. Tout cela vit ici une seule fois.
 //
 // Un thème ne décrit que ce qui lui est propre : ses champs, la façon de poser
 // la question (une image, un numéro, une carte) et de la dévoiler. Voir
-// `src/app.js`, `src/app-paintings.js`, `src/app-countries.js`.
+// `src/app.js`, `src/app-paintings.js`, `src/app-countries.js`, `src/app-plants.js`.
 
 import { dateKey, humanDate } from '../lib/date.js';
 import { DAILY, PRACTICE, requestedMode } from '../lib/mode.js';
@@ -359,7 +359,7 @@ export function startQuizApp(spec) {
     const prompt = el('answer-form').querySelector('.prompt');
     if (!prompt) return;
     // Un énoncé n'est pas un contrôle : il se vise, mais n'entre pas dans
-    // l'ordre de tabulation. Posé ici et non dans les cinq pages — sans
+    // l'ordre de tabulation. Posé ici et non dans les six pages — sans
     // JavaScript, il n'y aurait rien à viser.
     prompt.tabIndex = -1;
     prompt.focus();
