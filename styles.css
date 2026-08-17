@@ -1040,15 +1040,15 @@ a.btn {
 /* Le cadre d'attente est posé par `src/ui/illustration.js`. Le temps qu'une
    nouvelle illustration arrive — sur un réseau lent, cela se compte en
    secondes — l'image s'efface : sans cela le navigateur garderait la
-   précédente à l'écran, celle dont on vient de lire la réponse. */
-.artwork.is-loading img,
-.plant.is-loading img,
-.flag.is-loading img {
-  display: none;
-}
+   précédente à l'écran, celle dont on vient de lire la réponse.
 
+   Ce qui s'affiche est décidé là-bas, par `hidden`, et pas ici : cette feuille
+   peut être en cache quand le script vient d'être déployé, et le cadre serait
+   alors affiché en permanence par-dessus l'ancienne image. Il ne reste ici que
+   l'allure — d'où la règle `[hidden]`, sans laquelle le `display` ci-dessous
+   couvrirait celui du navigateur. */
 .illustration-placeholder {
-  display: none;
+  display: grid;
   place-items: center;
   margin: 0;
   padding: 20px;
@@ -1061,8 +1061,8 @@ a.btn {
   animation: illustration-wait 1.4s ease-in-out infinite;
 }
 
-.is-loading .illustration-placeholder {
-  display: grid;
+.illustration-placeholder[hidden] {
+  display: none;
 }
 
 /* Le cadre prend la place de l'illustration attendue. Celle du drapeau est

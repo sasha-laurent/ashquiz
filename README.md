@@ -506,6 +506,16 @@ les trois thèmes illustrés depuis leur `ask`. Le repli des images injoignables
 page par page : Commons hors d'atteinte, `npm run build:flags` ou `build:plants` pas lancé) passe
 par la même fonction — attendre et échouer sont les deux fins de la même histoire.
 
+Un détail qui n'en est pas un : **ce qui se montre et ce qui se cache passe par `hidden`**, pas par
+une classe que `styles.css` traduirait en `display`. Les deux fichiers ne sont pas servis à la même
+heure — GitHub Pages garde la feuille de style dix minutes en cache, si bien qu'un script tout juste
+déployé tourne un moment avec l'ancienne feuille, qui ne connaît pas encore la classe. Le cadre
+resterait alors affiché en permanence, par-dessus l'ancienne image : exactement le contraire de ce
+qu'il vient faire. `hidden` est compris du navigateur seul, et une feuille de style en retard ne
+coûte plus que l'allure du cadre — un texte sans cadre, le temps que le cache expire. La règle
+`.illustration-placeholder[hidden]` est là pour cela : sans elle, le `display: grid` de l'allure
+couvrirait le `display: none` du navigateur.
+
 ## Sur téléphone
 
 Les sept pastilles de l'en-tête — l'accueil et les six thèmes — font largement plus de 550 px : sur un

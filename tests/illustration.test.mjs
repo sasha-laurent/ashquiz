@@ -83,26 +83,36 @@ test("le temps du chargement, l'illustration cède la place au cadre d'attente",
   // L'`alt` de l'image annonce déjà la question : le cadre n'est pas relu.
   assert.equal(inserted[0].getAttribute('aria-hidden'), 'true');
   assert.match(inserted[0].textContent, /\S/);
+  // Ce qui se voit tient à `hidden`, pas à une classe : la feuille de style
+  // peut être en cache quand le script vient d'être déployé.
+  assert.equal(image.hidden, true);
+  assert.equal(inserted[0].hidden, false);
 });
 
 test("l'image arrivée, le cadre s'efface", () => {
-  const { figure, image } = makeFigure();
+  const { figure, image, inserted } = makeFigure();
 
   showIllustration(figure, image, 'data/drapeaux/fr.png');
   image.onload();
 
   assert.equal(figure.classList.contains('is-loading'), false);
   assert.equal(figure.classList.contains('is-broken'), false);
+  assert.equal(image.hidden, false);
+  assert.equal(inserted[0].hidden, true);
 });
 
 test("l'image injoignable rend la main au repli de la page", () => {
-  const { figure, image } = makeFigure();
+  const { figure, image, inserted } = makeFigure();
 
   showIllustration(figure, image, 'data/drapeaux/fr.png');
   image.onerror();
 
   assert.equal(figure.classList.contains('is-loading'), false);
   assert.equal(figure.classList.contains('is-broken'), true);
+  // Le repli de la page prend le relais : ni cadre d'attente, ni image cachée
+  // par autre chose que la feuille de style.
+  assert.equal(inserted[0].hidden, true);
+  assert.equal(image.hidden, false);
 
   // La question suivante repart d'une figure nette : un repli affiché une fois
   // ne doit pas survivre à l'image qui charge derrière.
@@ -113,12 +123,14 @@ test("l'image injoignable rend la main au repli de la page", () => {
 test("une image déjà en cache n'affiche pas de cadre", () => {
   // Sinon le cadre clignoterait entre deux questions, ce qui coûte plus qu'il
   // ne rapporte : l'image est là avant même le retour de `showIllustration`.
-  const { figure, image } = makeFigure(new Map([['data/drapeaux/fr.png', 640]]));
+  const { figure, image, inserted } = makeFigure(new Map([['data/drapeaux/fr.png', 640]]));
 
   showIllustration(figure, image, 'data/drapeaux/fr.png');
 
   assert.equal(figure.classList.contains('is-loading'), false);
   assert.equal(figure.classList.contains('is-broken'), false);
+  assert.equal(inserted[0].hidden, true);
+  assert.equal(image.hidden, false);
 });
 
 test('une image en cache dont le chargement a échoué reste en repli', () => {
@@ -151,12 +163,17 @@ test("les trois thèmes illustrés passent par le cadre d'attente", async () => 
   }
 });
 
-test("l'illustration s'efface vraiment pendant le chargement", async () => {
-  // Le cadre ne sert à rien si la feuille de style laisse l'image dessous.
+test("le cadre ne dépend pas de la feuille de style pour se cacher", async () => {
+  // La feuille et le script ne sont pas servis à la même heure : GitHub Pages
+  // garde `styles.css` dix minutes en cache, et un script fraîchement déployé
+  // tourne un moment avec l'ancienne feuille. Rien de ce qui s'affiche ne doit
+  // donc tenir à une classe.
+  const source = await readFile(resolve(ROOT, 'src/ui/illustration.js'), 'utf8');
+  assert.match(source, /placeholder\.hidden = /);
+  assert.match(source, /image\.hidden = /);
+
+  // Le `display` de l'allure couvrirait celui du navigateur : sans cette règle,
+  // un cadre `hidden` resterait affiché.
   const styles = await readFile(resolve(ROOT, 'styles.css'), 'utf8');
-  assert.match(
-    styles,
-    /\.artwork\.is-loading img,\n\.plant\.is-loading img,\n\.flag\.is-loading img \{\n {2}display: none;/,
-  );
-  assert.match(styles, /\.is-loading \.illustration-placeholder \{\n {2}display: grid;/);
+  assert.match(styles, /\.illustration-placeholder\[hidden\] \{\n {2}display: none;/);
 });
