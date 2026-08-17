@@ -3,7 +3,7 @@
 Petits quiz de révision quotidiens. La page d'accueil (`index.html`) est un menu : un bloc par
 thème, avec son quiz du jour et son entraînement libre.
 
-Cinq thèmes pour l'instant :
+Six thèmes pour l'instant :
 
 - **Départements et préfectures français** (`departements.html`) ;
 - **Tableaux** (`tableaux.html`) : reconnaître une œuvre, son peintre et son siècle ;
@@ -11,7 +11,9 @@ Cinq thèmes pour l'instant :
 - **États américains** (`etats-unis.html`) : à partir du code à deux lettres, le nom de l'État, sa
   capitale et sa position sur la carte ;
 - **Racines grecques et latines** (`racines.html`) : à partir d'une racine, d'un préfixe ou d'un
-  suffixe, son sens en français et son origine.
+  suffixe, son sens en français et son origine ;
+- **Plantes, fleurs et arbres** (`plantes.html`) : à partir d'une photo, le nom français de l'espèce
+  et sa famille botanique.
 
 Chaque thème a sa propre série du jour, sa propre progression et sa propre série de jours
 consécutifs. On y répond au clavier, avec la possibilité de passer une question donnée en **mode
@@ -38,6 +40,7 @@ npm run build:map        # une fois : télécharge le fond de carte dans data/
 npm run build:paintings  # une fois : télécharge la liste des œuvres dans data/
 npm run build:flags      # une fois : télécharge les drapeaux dans data/drapeaux/
 npm run build:states     # une fois : télécharge le fond de carte des États-Unis dans data/
+npm run build:plants     # une fois : télécharge les photos de plantes dans data/plantes/
 npm run dev              # http://localhost:8080
 npm test                 # tests unitaires (aucune dépendance)
 ```
@@ -181,6 +184,11 @@ sens proposés sont ceux de racines du **même champ sémantique** (`famille`, d
 *demi* et *égal* — quatre façons de dire une quantité, donc une vraie question. Entre *plusieurs*,
 *pierre*, *cheval* et *écrire*, il n'y aurait qu'un tri par thème, et la bonne case sauterait aux
 yeux sans rien apprendre.
+
+**Plantes** (nom, famille) — les noms sont pris au hasard dans le corpus, mais les familles dans la
+**liste des familles**, où chacune ne figure qu'une fois. Tirer quatre espèces et lire leur famille,
+comme le font les drapeaux avec leurs capitales, aurait souvent proposé deux fois la même famille,
+dont l'une fausse : le corpus compte jusqu'à six espèces par famille.
 
 **Tableaux** (titre, peintre, siècle) — quatre propositions quelconques prises dans le corpus,
 tirées indépendamment pour chaque sous-réponse : un nom de peintre appartient à toutes ses œuvres,
@@ -381,11 +389,88 @@ C'est le pendant du carré pour ce thème : le carré aide à *reconnaître* un 
 *retrouver* — « télé-, comme dans télévision » suffit souvent à débloquer une racine qu'on connaît
 sans savoir la nommer.
 
+## Plantes, fleurs et arbres
+
+Cinq plantes par jour. Pour chacune, la photo est affichée et il faut donner :
+
+1. le **nom français** de l'espèce,
+2. sa **famille** botanique.
+
+Deux sous-réponses, donc **2 points par question et 10 points par jour**, comme les drapeaux : la
+photo tient lieu d'énoncé, il n'y a rien à désigner en plus. La famille est ce qui fait du thème
+autre chose qu'un imagier — reconnaître un pissenlit s'apprend seul, le ranger chez les astéracées
+avec la marguerite, le bleuet et le tournesol demande un classement.
+
+Le corpus (`src/data/plants.js`) mêle une centaine d'espèces communes en France et en Europe :
+arbres des forêts et des rues, fleurs des prés et des jardins, plantes cultivées et « mauvaises
+herbes ». Il compte **plusieurs espèces par famille** — six astéracées, cinq rosacées, cinq
+fabacées, cinq pinacées — parce que c'est ce qui rend la seconde sous-réponse apprenable ; une même
+série n'en pose d'ailleurs jamais deux de la même famille, sans quoi la réponse serait à taper deux
+fois.
+
+Chaque espèce porte son **nom scientifique**, qui ne se demande jamais mais s'affiche à la
+correction : c'est lui qui relie le nom français à la famille (*Bellis perennis*, donc astéracées).
+
+Les familles sont celles d'**APG IV**, la classification de Wikidata : le tilleul est chez les
+malvacées et non les tiliacées, le muguet chez les asparagacées et non les liliacées. Les anciennes
+familles, encore dans tous les manuels, restent acceptées à la correction — « Acéracées » pour
+l'érable, « Composées » pour les astéracées, « Labiées » pour les lamiacées — de même que la forme
+scientifique de la famille : « Rosacées » comme « Rosaceae ». Un point perdu sur une graphie
+n'apprendrait rien à personne.
+
+Deux détails de correction méritent d'être signalés :
+
+- **une famille appartient à toutes ses espèces**. Le garde-fou de `src/lib/text.js` refuse la
+  tolérance aux fautes de frappe à une saisie qui est exactement la réponse d'un *autre* item ;
+  sans traitement à part, « Rosacées » n'aurait été accepté que sur une seule des cinq rosacées du
+  corpus. C'est le `ownerOf` de `createQuiz`, déjà utilisé pour les peintres ;
+- **au carré, les familles sont tirées dans la liste des familles**, et non parmi celles de quatre
+  espèces prises au hasard comme le fait le thème des drapeaux pour ses capitales : quatre espèces
+  au hasard partagent souvent une famille, et deux propositions identiques dont l'une serait fausse
+  n'ont pas de sens.
+
+### Les photos
+
+`npm run build:plants` écrit `data/plantes/<code>.jpg` : une photo de 500 px de large par espèce,
+téléchargée depuis [Wikimedia Commons](https://commons.wikimedia.org), et
+`data/plantes/credits.json`, l'auteur et la licence de chacune. Les 104 fichiers pèsent environ
+11 Mo, dont une page de quiz ne charge que les cinq photos de sa série.
+
+Comme les drapeaux, **les images sont vendorisées** : une URL Commons contient le nom du fichier,
+donc l'espèce, et souvent la réponse en toutes lettres. C'est aussi pourquoi le code d'une espèce
+est un numéro (`p075`) et non un nom : il baptise le fichier, et `paquerette.jpg` dans l'onglet
+réseau vaudrait solution. Ces codes ne sont **jamais renumérotés** — ce sont les clés des
+statistiques déjà enregistrées ; une espèce retirée laisse simplement un trou dans la suite.
+
+Ce que l'outil va chercher, là où `build:flags` lit un nom de fichier écrit à la main : seul le nom
+scientifique est déclaré dans les données, Wikidata donne le reste — l'illustration de l'espèce
+(P18), l'article français correspondant, et la famille par remontée des taxons parents (P171)
+jusqu'au rang « famille ». Recopier une centaine d'identifiants `Q…` à la main aurait été une source
+d'erreurs silencieuses ; un nom de taxon se relit dans la liste.
+
+Deux garde-fous sortent de là :
+
+- **la famille est vérifiée, jamais importée**. Celle que donne Wikidata est comparée au
+  `familyLatin` déclaré, et tout écart est signalé en fin de commande. Une famille fausse, dans un
+  quiz qui la demande, ne se voit pas autrement ;
+- **une planche n'est pas une photo**. P18 sert parfois une planche d'herbier ou une gravure du
+  XIXe siècle : elles portent le nom latin **imprimé dessus**, donc la réponse. L'outil préfère donc
+  la photo de tête de l'article de Wikipédia, écarte les fichiers dont le nom trahit une planche, et
+  ne garde que du JPEG — Commons ne convertit pas une vignette d'un format à l'autre, un PNG
+  sortirait tel quel d'un fichier nommé `.jpg`. Il reste deux espèces où rien de bon ne sortait :
+  elles déclarent leur image dans le champ `commons`, l'exception plutôt que la règle.
+
+Enfin, ces photos ne sont ni des drapeaux ni des tableaux tombés dans le domaine public : elles sont
+sous **licence libre avec attribution**. L'auteur et la licence de chacune s'affichent donc sous
+l'image à la correction (pas avant : le nom d'un fichier Commons donne souvent l'espèce), et
+`credits.json` est chargé au démarrage — son absence est un écran d'erreur, pas un détail qu'on
+passe sous silence.
+
 ## L'illustration en grand
 
-Le tableau et le drapeau partagent la place avec le formulaire : ils sont bornés à 62 % de la
-hauteur de la fenêtre, et à 46 % dès que les colonnes s'empilent. C'est assez pour reconnaître un
-drapeau, rarement pour détailler un tableau. **Un clic sur l'illustration l'affiche donc sur toute
+Le tableau, le drapeau et la photo de plante partagent la place avec le formulaire : ils sont
+bornés à 62 % de la hauteur de la fenêtre, et à 46 % dès que les colonnes s'empilent. C'est assez
+pour reconnaître un drapeau, rarement pour détailler un tableau ou la nervure d'une feuille. **Un clic sur l'illustration l'affiche donc sur toute
 la page, et un second referme** — c'est le même geste qui ouvre et qui ferme, où que soit le
 pointeur : il n'y a pas de croix à viser. La touche Échap referme aussi, et le focus revient à
 l'illustration d'où l'on est parti.
@@ -403,12 +488,12 @@ Les thèmes sans illustration ne marquent rien, et ne reçoivent pas de fenêtre
 
 ## Sur téléphone
 
-Les six pastilles de l'en-tête — l'accueil et les cinq thèmes — font près de 550 px : sur un
+Les sept pastilles de l'en-tête — l'accueil et les six thèmes — font largement plus de 550 px : sur un
 téléphone elles sortaient de l'écran, et toute la page se mettait à défiler horizontalement. En
 dessous de 720 px de large, elles se replient donc derrière un bouton, et se déplient en panneau
 sous l'en-tête ; il se referme à la touche Échap ou au premier clic à côté.
 
-Ce bouton est posé par `src/ui/theme-nav.js`, pas écrit dans les six pages : c'est un affordance de
+Ce bouton est posé par `src/ui/theme-nav.js`, pas écrit dans les sept pages : c'est un affordance de
 JavaScript, et une duplication de moins entre les pages. Sans JavaScript, il n'apparaît pas et la
 barre reste affichée telle quelle — `.themes` passe à la ligne dans `styles.css`, ce qui coûte une
 rangée dans l'en-tête mais ne déborde jamais. Les pages n'ont donc rien à porter d'autre que leur
@@ -416,7 +501,7 @@ rangée dans l'en-tête mais ne déborde jamais. Les pages n'ont donc rien à po
 
 Chaque nouvelle question donne aussi le focus au premier champ, pour qu'on puisse taper sans viser :
 sur un téléphone, cela appelait le clavier virtuel, qui couvre la moitié basse de l'écran. Le
-tableau, le drapeau ou la carte se retrouvaient poussés hors de vue, et il fallait refermer le
+tableau, le drapeau, la photo ou la carte se retrouvaient poussés hors de vue, et il fallait refermer le
 clavier pour lire la question qu'on venait de recevoir. Sur un appareil tactile, c'est donc l'énoncé
 qui prend le focus : on lit la question, puis on tape dans le champ, ce qui appelle le clavier au
 moment voulu.
@@ -426,7 +511,7 @@ disparaître, et à défaut le focus retomberait sur `<body>` — un lecteur d'�
 question suivante, et la page resterait au bas du formulaire. `focusQuestion()`
 (`src/ui/quiz-app.js`) vise donc le `<p class="prompt">` de la page, qu'il rend focalisable au
 passage : `tabindex="-1"` se vise sans entrer dans l'ordre de tabulation. Comme le bouton des
-thèmes, il est posé en JavaScript et non écrit dans les cinq pages — sans JavaScript, il n'y aurait
+thèmes, il est posé en JavaScript et non écrit dans les six pages — sans JavaScript, il n'y aurait
 rien à viser. Un énoncé n'étant pas un contrôle, `styles.css` lui retire le cadre de mise au point.
 
 Le partage se fait sur `(pointer: coarse)` (`src/ui/keyboard.js`) et non sur la largeur : c'est
@@ -437,7 +522,7 @@ bouge pas : Entrée enchaîne les champs, et la correction met le focus sur « Q
 
 ## Ajouter un thème plus tard
 
-Les cinq thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
+Les six thèmes posent au fond la même question — « voici un item, donne-en deux ou trois
 caractéristiques » — et ce déroulé n'est écrit qu'une fois. Un thème ne décrit que ce qui lui est
 propre ; les deux briques communes s'occupent du reste :
 
@@ -475,11 +560,12 @@ le même jour — mais **le changer une fois le thème en ligne rebattrait les c
 monde**.
 
 Deux façons de ranger les données, selon le thème. Liste fermée et stable (départements, pays,
-États américains, racines) :
+États américains, racines, plantes) :
 un module JS importé normalement, modifiable à la main, et les outils de `tools/` ne servent qu'aux
 images. Corpus ouvert et régénérable (tableaux) : un fichier de `data/` produit par un outil et
 chargé en JSON à l'exécution, ce qui impose un écran de chargement et un écran d'erreur — le thème
-« pays » s'en passe.
+« pays » s'en passe. Les deux se mélangent : les plantes sont une liste tenue à la main, mais les
+crédits de leurs photos sont produits par l'outil, donc chargés à l'exécution comme un corpus.
 
 Ajouter une entrée à `THEMES` suffit à faire apparaître le thème dans le menu, avec ses deux
 boutons et son état du jour : `src/app-menu.js` ne connaît rien du contenu des thèmes, il lit leur

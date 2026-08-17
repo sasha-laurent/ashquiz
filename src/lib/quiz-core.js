@@ -1,10 +1,11 @@
 // Noyau commun aux quiz, indépendant du DOM : index des réponses, tirage de la
 // série, correction et notation.
 //
-// Les trois thèmes posent la même question sous des habits différents : « voici
+// Les six thèmes posent la même question sous des habits différents : « voici
 // un item, donne-en deux ou trois caractéristiques ». Ce module décrit ce
 // déroulé une fois ; un thème ne fournit plus que son corpus, ses sous-réponses
-// et ses alias (`src/lib/quiz.js`, `quiz-countries.js`, `quiz-paintings.js`).
+// et ses alias (`src/lib/quiz.js`, `quiz-countries.js`, `quiz-paintings.js`,
+// `quiz-plants.js`).
 
 import { pickChoices } from './choices.js';
 import { makeRng, sample, shuffle } from './rng.js';

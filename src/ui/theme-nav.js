@@ -1,11 +1,11 @@
 // La barre des thèmes de l'en-tête, repliée quand l'écran est étroit.
 //
-// Les six pastilles tiennent sur une ligne au large, mais font près de 550 px :
+// Les sept pastilles tiennent sur une ligne au large, mais font plus de 550 px :
 // sur un téléphone elles débordaient de la page, qui se mettait alors à défiler
 // horizontalement. À l'étroit, un bouton les remplace et les déplie sous
 // l'en-tête.
 //
-// Le bouton est créé ici et non dans les six pages HTML : c'est un affordance de
+// Le bouton est créé ici et non dans les sept pages HTML : c'est un affordance de
 // JavaScript, et sans JavaScript il ne doit pas apparaître. Dans ce cas la barre
 // reste affichée telle quelle — `styles.css` la fait passer à la ligne, ce qui
 // coûte une rangée mais ne déborde jamais. C'est aussi une duplication de moins

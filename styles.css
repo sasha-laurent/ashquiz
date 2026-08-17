@@ -888,14 +888,20 @@ a.btn {
   margin-bottom: 4px;
 }
 
-.artwork {
+/* Le tableau et la photo de plante s'affichent de la même façon : une image au
+   format libre, bornée en hauteur pour ne pas pousser le formulaire hors de
+   l'écran. Les règles sont donc partagées — le drapeau, lui, garde son cadre
+   fixe (voir `.flag`). */
+.artwork,
+.plant {
   margin: 0;
   display: grid;
   gap: 10px;
   justify-items: center;
 }
 
-.artwork img {
+.artwork img,
+.plant img {
   max-width: 100%;
   /* La hauteur borne les formats en portrait, qui sinon poussent le formulaire
      hors de l'écran. */
@@ -905,7 +911,8 @@ a.btn {
   background: var(--surface-2);
 }
 
-.artwork-caption {
+.artwork-caption,
+.plant-caption {
   font-size: 13px;
   text-align: center;
   min-height: 1.4em;
@@ -923,20 +930,24 @@ a.btn {
 @media (max-width: 860px) {
   /* Colonnes empilées : le tableau doit passer avant le formulaire, sinon il
      faut scroller pour voir ce qu'on est censé identifier. */
-  .artwork {
+  .artwork,
+  .plant {
     order: -1;
   }
 
-  .artwork img {
+  .artwork img,
+  .plant img {
     max-height: 46vh;
   }
 }
 
-.artwork.is-broken img {
+.artwork.is-broken img,
+.plant.is-broken img {
   display: none;
 }
 
-.artwork-fallback {
+.artwork-fallback,
+.plant-fallback {
   display: none;
   padding: 40px 20px;
   border: 1px dashed var(--line);
@@ -946,8 +957,18 @@ a.btn {
   text-align: center;
 }
 
-.artwork.is-broken .artwork-fallback {
+.artwork.is-broken .artwork-fallback,
+.plant.is-broken .plant-fallback {
   display: block;
+}
+
+/* Les photos de Commons ne sont pas dans le domaine public comme les tableaux :
+   elles demandent l'auteur et la licence. Le crédit se lit sous la légende, en
+   plus petit — c'est une mention légale, pas une réponse à retenir. */
+.plant-credit {
+  margin: -4px 0 0;
+  font-size: 12px;
+  text-align: center;
 }
 
 .flag {
