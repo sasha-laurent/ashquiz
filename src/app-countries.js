@@ -7,6 +7,7 @@ import { flagUrl } from './lib/countries.js';
 import { QUIZ } from './lib/quiz-countries.js';
 import { weakest } from './lib/quiz-core.js';
 import { THEMES_BY_ID } from './lib/themes.js';
+import { showIllustration } from './ui/illustration.js';
 import { startQuizApp } from './ui/quiz-app.js';
 
 /** « Pretoria (ou Le Cap, Bloemfontein) » quand plusieurs capitales comptent. */
@@ -27,12 +28,12 @@ startQuizApp({
 
   ask(country, ctx) {
     const image = ctx.el('flag-image');
-    // Le drapeau est vendorisé : une image manquante veut dire que
-    // `npm run build:flags` n'a pas été lancé. Sans repli, la question se réduit
-    // à un cadre vide sans explication.
-    ctx.el('flag').classList.remove('is-broken');
-    image.onerror = () => ctx.el('flag').classList.add('is-broken');
-    image.src = flagUrl(country.code);
+    // Le drapeau est vendorisé mais reste servi par le réseau : `showIllustration`
+    // fait patienter le temps du chargement, sinon le drapeau précédent — dont la
+    // réponse vient d'être lue — resterait affiché. Une image manquante, elle,
+    // veut dire que `npm run build:flags` n'a pas été lancé : sans repli, la
+    // question se réduirait à un cadre vide sans explication.
+    showIllustration(ctx.el('flag'), image, flagUrl(country.code));
     // Pas d'`alt` descriptif tant que la réponse n'est pas donnée : sinon un
     // lecteur d'écran (ou un clic droit) livre la solution.
     image.alt = 'Drapeau à identifier';

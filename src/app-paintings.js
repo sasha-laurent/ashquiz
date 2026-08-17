@@ -6,6 +6,7 @@ import { centuryLabel, century, loadPaintings } from './lib/paintings.js';
 import { weakest } from './lib/quiz-core.js';
 import { createPaintingQuiz } from './lib/quiz-paintings.js';
 import { THEMES_BY_ID } from './lib/themes.js';
+import { showIllustration } from './ui/illustration.js';
 import { startQuizApp } from './ui/quiz-app.js';
 
 // Les siècles représentés dans le corpus : les boutons de départ, avant tout
@@ -62,11 +63,11 @@ startQuizApp({
 
   ask(painting, ctx) {
     const image = ctx.el('artwork-image');
-    // Commons peut être injoignable : sans repli, la question se réduit à un
-    // cadre vide sans explication.
-    ctx.el('artwork').classList.remove('is-broken');
-    image.onerror = () => ctx.el('artwork').classList.add('is-broken');
-    image.src = painting.image;
+    // Commons peut être injoignable, ou lent : `showIllustration` fait patienter
+    // le temps du chargement — sinon l'œuvre précédente, dont la réponse vient
+    // d'être lue, resterait affichée — et affiche le repli de la page quand
+    // l'image ne vient pas du tout.
+    showIllustration(ctx.el('artwork'), image, painting.image);
     // Le titre reste caché : pas d'`alt` descriptif tant que la réponse n'est pas
     // donnée, sinon un lecteur d'écran (ou un clic droit) livre la solution.
     image.alt = 'Tableau à identifier';
