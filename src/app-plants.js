@@ -11,6 +11,7 @@ import { creditLabel, loadCredits, plantUrl } from './lib/plants.js';
 import { weakest } from './lib/quiz-core.js';
 import { QUIZ } from './lib/quiz-plants.js';
 import { THEMES_BY_ID } from './lib/themes.js';
+import { showIllustration } from './ui/illustration.js';
 import { startQuizApp } from './ui/quiz-app.js';
 
 // Auteur et licence de chaque photo, chargés au démarrage.
@@ -36,12 +37,12 @@ startQuizApp({
 
   ask(plant, ctx) {
     const image = ctx.el('plant-image');
-    // La photo est vendorisée : une image manquante veut dire que
-    // `npm run build:plants` n'a pas été lancé. Sans repli, la question se
-    // réduirait à un cadre vide sans explication.
-    ctx.el('plant').classList.remove('is-broken');
-    image.onerror = () => ctx.el('plant').classList.add('is-broken');
-    image.src = plantUrl(plant.code);
+    // La photo est vendorisée mais reste servie par le réseau : `showIllustration`
+    // fait patienter le temps du chargement, sinon la plante précédente — dont la
+    // réponse vient d'être lue — resterait affichée. Une image manquante, elle,
+    // veut dire que `npm run build:plants` n'a pas été lancé : sans repli, la
+    // question se réduirait à un cadre vide sans explication.
+    showIllustration(ctx.el('plant'), image, plantUrl(plant.code));
     // Pas d'`alt` descriptif tant que la réponse n'est pas donnée : sinon un
     // lecteur d'écran (ou un clic droit) livre la solution.
     image.alt = 'Plante à identifier';

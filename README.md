@@ -486,6 +486,26 @@ l'image qui s'agrandit. Comme le bouton des thèmes, l'affordance est ajoutée e
 une image ne l'est pas — et sans JavaScript, rien ne s'annonce cliquable puisque rien ne s'ouvrirait.
 Les thèmes sans illustration ne marquent rien, et ne reçoivent pas de fenêtre.
 
+## L'illustration qui charge
+
+Passer à la question suivante ne fait que changer le `src` de la même image, et le navigateur garde
+la précédente à l'écran tant que la nouvelle n'est pas arrivée. Sur un bon réseau cela ne se voit
+pas ; sur un mauvais, **la question suivante s'ouvre sur l'illustration de la précédente** — celle
+dont on vient justement de lire la réponse. On croit reconnaître, on répond, et l'image change sous
+les doigts.
+
+Le temps du chargement, l'illustration cède donc la place à un cadre d'attente : mieux vaut ne rien
+montrer qu'une réponse périmée. Le cadre prend la place de l'image attendue — exactement celle du
+drapeau, dont le format est fixe ; un format courant pour un tableau ou une photo, dont on ne sait
+rien avant de les recevoir — et bat doucement, là où un cadre figé ressemblerait à une image
+manquante (le battement s'arrête sous `prefers-reduced-motion: reduce`). Une image déjà en cache,
+elle, ne fait clignoter aucun cadre : elle est là avant même que la question ne s'affiche.
+
+Tout cela tient dans `showIllustration(figure, image, src)` (`src/ui/illustration.js`), qu'appellent
+les trois thèmes illustrés depuis leur `ask`. Le repli des images injoignables (`is-broken`, décrit
+page par page : Commons hors d'atteinte, `npm run build:flags` ou `build:plants` pas lancé) passe
+par la même fonction — attendre et échouer sont les deux fins de la même histoire.
+
 ## Sur téléphone
 
 Les sept pastilles de l'en-tête — l'accueil et les six thèmes — font largement plus de 550 px : sur un

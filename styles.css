@@ -1035,6 +1035,74 @@ a.btn {
   display: block;
 }
 
+/* --- L'illustration qui charge --------------------------------------------- */
+
+/* Le cadre d'attente est posé par `src/ui/illustration.js`. Le temps qu'une
+   nouvelle illustration arrive — sur un réseau lent, cela se compte en
+   secondes — l'image s'efface : sans cela le navigateur garderait la
+   précédente à l'écran, celle dont on vient de lire la réponse. */
+.artwork.is-loading img,
+.plant.is-loading img,
+.flag.is-loading img {
+  display: none;
+}
+
+.illustration-placeholder {
+  display: none;
+  place-items: center;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  animation: illustration-wait 1.4s ease-in-out infinite;
+}
+
+.is-loading .illustration-placeholder {
+  display: grid;
+}
+
+/* Le cadre prend la place de l'illustration attendue. Celle du drapeau est
+   connue d'avance (voir `.flag img`) ; le format d'un tableau ou d'une photo,
+   lui, ne se sait qu'une fois l'image arrivée — un format courant vaut mieux
+   qu'un cadre qui saute. */
+.artwork .illustration-placeholder,
+.plant .illustration-placeholder {
+  width: min(100%, 420px);
+  aspect-ratio: 4 / 3;
+  max-height: min(62vh, 560px);
+}
+
+.flag .illustration-placeholder {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 3 / 2;
+}
+
+@media (max-width: 860px) {
+  .artwork .illustration-placeholder,
+  .plant .illustration-placeholder {
+    max-height: 46vh;
+  }
+}
+
+/* Le battement dit que quelque chose arrive, là où un cadre figé ressemble à
+   une image manquante. */
+@keyframes illustration-wait {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illustration-placeholder {
+    animation: none;
+  }
+}
+
 /* --- L'illustration en grand ----------------------------------------------- */
 
 /* La classe est posée par `src/ui/lightbox.js` : sans JavaScript, rien
