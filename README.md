@@ -131,6 +131,20 @@ les statistiques. On y accède depuis le menu ou depuis l'écran de résultat ; 
 même si elle n'est pas encore faite. Sans ce paramètre, une page de thème ouvre toujours le quiz du
 jour — ou son résultat s'il est déjà joué.
 
+### Le récap du jour
+
+L'accueil ouvre sur un encart d'une ligne qui résume la journée : combien de quiz sont faits sur le
+total, les points marqués sur les quiz faits, puis une pastille par thème — son icône et son score,
+verte s'il est joué, grise avec un tiret sinon, et cliquable pour y aller. Le total des points ne
+porte que sur les quiz faits : le barème d'un thème jamais joué n'est pas connu, et « 11 / 15 » se
+lit mieux que « 11 / 30 ».
+
+Le calcul est une fonction pure (`src/lib/recap.js`) nourrie de ce que le menu a déjà lu dans chaque
+magasin ; `src/app-menu.js` ne fait que le mettre en forme. L'encart part `hidden` et n'apparaît
+qu'une fois la progression lue — le temps que les magasins répondent, mieux vaut ne rien afficher
+qu'un « 0 quiz » qui se corrige tout seul ; sans JavaScript il reste masqué, faute de progression à
+résumer.
+
 ## Mode carré
 
 Toute question commence au clavier. Le bouton **Passer au carré**, à côté de « Valider », remplace
